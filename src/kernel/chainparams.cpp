@@ -161,11 +161,11 @@ public:
         diskMagic[1] = 0xbe;
         diskMagic[2] = 0xb4;
         diskMagic[3] = 0xd9;
-        netMagic[0] = 0xe3;
-        netMagic[1] = 0xe1;
-        netMagic[2] = 0xf3;
-        netMagic[3] = 0xe8;
-        nDefaultPort = 8333;
+        netMagic[0] = 0x4d;
+        netMagic[1] = 0x43;
+        netMagic[2] = 0x41;
+        netMagic[3] = 0x01;
+        nDefaultPort = 19444; //main
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size =
             ChainParamsConstants::MAINNET_ASSUMED_BLOCKCHAIN_SIZE;
@@ -327,11 +327,11 @@ public:
         diskMagic[1] = 0x11;
         diskMagic[2] = 0x09;
         diskMagic[3] = 0x07;
-        netMagic[0] = 0xf4;
-        netMagic[1] = 0xe5;
-        netMagic[2] = 0xf3;
-        netMagic[3] = 0xf4;
-        nDefaultPort = 18333;
+        netMagic[0] = 0x4d;
+        netMagic[1] = 0x43;
+        netMagic[2] = 0x41;
+        netMagic[3] = 0x02;
+        nDefaultPort = 29444;  //test
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size =
             ChainParamsConstants::TESTNET_ASSUMED_BLOCKCHAIN_SIZE;
@@ -480,11 +480,11 @@ public:
         diskMagic[1] = 0xbf;
         diskMagic[2] = 0xb5;
         diskMagic[3] = 0xda;
-        netMagic[0] = 0xda;
-        netMagic[1] = 0xb5;
-        netMagic[2] = 0xbf;
-        netMagic[3] = 0xfa;
-        nDefaultPort = 18444;
+        netMagic[0] = 0x4d;
+        netMagic[1] = 0x43;
+        netMagic[2] = 0x41;
+        netMagic[3] = 0x03;
+        nDefaultPort = 39444;  //reg
         nPruneAfterHeight = opts.fastprune ? 100 : 1000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
