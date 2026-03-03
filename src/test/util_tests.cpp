@@ -1592,7 +1592,7 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney) {
     BOOST_CHECK(ParseMoney("1234567.89", ret));
     BOOST_CHECK_EQUAL(ret, 123456789 * SATOSHI);
 
-    BOOST_CHECK(ParseMoney("21000000000000.00", ret));
+    BOOST_CHECK(ParseMoney("21000000.00", ret));
     BOOST_CHECK_EQUAL(ret, MAX_MONEY);
 
     const auto XEC = Currency::get().baseunit;
