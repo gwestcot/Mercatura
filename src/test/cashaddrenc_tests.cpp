@@ -277,7 +277,7 @@ BOOST_AUTO_TEST_CASE(test_encode_address) {
          213, 62, 197, 251, 195, 180, 45, 248, 237, 16}};
 
     std::vector<std::string> pubkey = {
-        "ecash:qpm2qsznhks23z7629mms6s4cwef74vcwva87rkuu2",
+        "mca:qpm2qsznhks23z7629mms6s4cwef74vcwvnm409cpt",
         "ecash:qr95sy3j9xwd2ap32xkykttr4cvcu7as4ykdcjcn6n",
         "ecash:qqq3728yw0y47sqn6l2na30mcw6zm78dzq653y7pv5"};
     std::vector<std::string> script = {

@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_addresses) {
     const CTxDestination dstScript = ScriptHash(uint160(hash));
 
     std::string cashaddr_pubkey =
-        "ecash:qpm2qsznhks23z7629mms6s4cwef74vcwva87rkuu2";
+        "mca:qpm2qsznhks23z7629mms6s4cwef74vcwvnm409cpt";
     std::string cashaddr_script =
         "ecash:ppm2qsznhks23z7629mms6s4cwef74vcwv2zrv3l8h";
     std::string base58_pubkey = "1BpEi6DfDAUFd7GtittLSdBeYJvcoaVggu";
