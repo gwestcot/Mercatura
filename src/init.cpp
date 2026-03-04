@@ -424,8 +424,11 @@ static void OnRPCStopped() {
 }
 
 void SetupServerArgs(NodeContext &node) {
-    assert(!node.args);
-    node.args = &gArgs;
+    // Allow tests/fixtures to supply a per-context ArgsManager.
+    // If none is provided, default to the global gArgs.
+    if (!node.args) {
+        node.args = &gArgs;
+    }
     ArgsManager &argsman = *node.args;
 
     SetupHelpOptions(argsman);

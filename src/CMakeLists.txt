@@ -721,8 +721,11 @@ add_library(server
 target_include_directories(server PRIVATE leveldb/helpers/memenv)
 
 target_link_libraries(server
-	bitcoinconsensus
-	leveldb
+        bitcoinconsensus
+        leveldb
+        event_core
+        event_extra
+        event_pthreads
 )
 
 link_event(server event)
@@ -820,7 +823,7 @@ if(BUILD_CLI)
 		DESCRIPTION "JSON-RPC client for ${PACKAGE_NAME}"
 	)
 
-	target_link_libraries(bitcoin-cli common rpcclient)
+	target_link_libraries(bitcoin-cli common rpcclient event_core event_extra event_pthreads)
 	link_event(bitcoin-cli event)
 
 	add_to_symbols_check(bitcoin-cli)

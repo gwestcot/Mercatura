@@ -1590,7 +1590,7 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney) {
     BOOST_CHECK_EQUAL(ret, Amount::zero());
 
     BOOST_CHECK(ParseMoney("1234567.89", ret));
-    BOOST_CHECK_EQUAL(ret, 123456789);
+    BOOST_CHECK_EQUAL(ret, 123456789 * Currency::get().baseunit);
 
     BOOST_CHECK(ParseMoney("21000000.00", ret));
     BOOST_CHECK_EQUAL(ret, MAX_MONEY);
