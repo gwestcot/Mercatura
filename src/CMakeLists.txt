@@ -1025,6 +1025,9 @@ endif()
 
 # bitcoind
 add_executable(bitcoind bitcoind.cpp)
+add_executable(genesis_miner genesis_miner.cpp)
+target_include_directories(genesis_miner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(genesis_miner PRIVATE common)
 target_link_libraries(bitcoind server)
 generate_windows_version_info(bitcoind
 	DESCRIPTION "Bitcoin node with a JSON-RPC server"
