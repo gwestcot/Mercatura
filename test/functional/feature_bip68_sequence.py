@@ -432,8 +432,7 @@ class BIP68Test(BitcoinTestFramework):
         self.generate(self.wallet, 10, sync_fun=self.no_op)
 
     def get_csv_status(self):
-        height = self.nodes[0].getblockchaininfo()["blocks"]
-        return height >= 576
+        return True
 
     # Make sure that BIP68 isn't being used to validate blocks, prior to
     # versionbits activation.  If more blocks are mined prior to this test

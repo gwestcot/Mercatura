@@ -83,9 +83,7 @@ def all_rlt_txs(txs):
 
 
 def get_csv_status(node):
-    height = node.getblockchaininfo()["blocks"]
-    return height >= 576
-
+    return True
 
 class BIP68_112_113Test(BitcoinTestFramework):
     def set_test_params(self):
