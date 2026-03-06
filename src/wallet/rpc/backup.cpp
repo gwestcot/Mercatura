@@ -309,7 +309,7 @@ RPCHelpMan importaddress() {
         "\"importdescriptors\" for descriptor wallets.\n",
         {
             {"address", RPCArg::Type::STR, RPCArg::Optional::NO,
-             "The Bitcoin address (or hex-encoded script)"},
+             "The Mercatura address (or hex-encoded script)"},
             {"label", RPCArg::Type::STR, RPCArg::Default{""},
              "An optional label"},
             {"rescan", RPCArg::Type::BOOL, RPCArg::Default{true},
@@ -406,7 +406,7 @@ RPCHelpMan importaddress() {
                         true /* apply_label */, 1 /* timestamp */);
                 } else {
                     throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-                                       "Invalid Bitcoin address or script");
+                                       "Invalid Mercatura address or script");
                 }
             }
             if (fRescan) {
@@ -906,7 +906,7 @@ RPCHelpMan dumpprivkey() {
                 DecodeDestination(strAddress, wallet->GetChainParams());
             if (!IsValidDestination(dest)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-                                   "Invalid Bitcoin address");
+                                   "Invalid Mercatura address");
             }
             auto keyid = GetKeyForDestination(spk_man, dest);
             if (keyid.IsNull()) {

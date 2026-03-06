@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2016 The Bitcoin Core developers
+// Copyright (c) 2011-2026 The Mercatura Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -371,7 +371,7 @@ void Intro::UpdatePruneLabels(bool prune_checked) {
     }
     ui->lblExplanation3->setVisible(prune_checked);
     ui->sizeWarningLabel->setText(
-        tr("%1 will download and store a copy of the Bitcoin block chain.")
+        tr("%1 will download and store a copy of the Mercatura block chain.")
             .arg(PACKAGE_NAME) +
         " " + storageRequiresMsg.arg(m_required_space_gb) + " " +
         tr("The wallet will also be stored in this directory."));
