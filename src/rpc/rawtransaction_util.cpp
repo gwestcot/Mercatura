@@ -367,7 +367,7 @@ std::vector<RPCResult> DecodeTxDoc(const std::string &txid_field_doc,
                             {
                                 {RPCResult::Type::STR, "address",
                                  /*optional=*/true,
-                                 "The eCash address (only if a well-defined "
+                                 "The MCA address (only if a well-defined "
                                  "address exists)"},
                             }},
                        }},
