@@ -156,11 +156,11 @@ int main() {
     const char* merkle_hex = "0ab47e77458e949f2f881f9fbb6b9a49cedc25fcf42edecfc0c7fdf3e50d350e";
     auto merkle_le = merkle_hex_to_le(merkle_hex);
 
-    auto r1 = mine(1231006505, 0x1d00ffff, merkle_le);
+    auto r1 = mine(1231006505, 0x1e00ffff, merkle_le);
     std::printf("MAIN_NONCE %u\n", r1.nonce);
     print_hash("MAIN_HASH ", r1.hash_be);
 
-    auto r2 = mine(1296688602, 0x1d00ffff, merkle_le);
+    auto r2 = mine(1296688602, 0x1e00ffff, merkle_le);
     std::printf("TEST_NONCE %u\n", r2.nonce);
     print_hash("TEST_HASH ", r2.hash_be);
 

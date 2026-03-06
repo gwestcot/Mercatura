@@ -97,7 +97,7 @@ public:
         // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
         consensus.CSVHeight = 419328;
         consensus.powLimit = uint256S(
-            "00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            "0000ffff00000000000000000000000000000000000000000000000000000000");  //temporary change for mining genesis
         // two weeks
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60;
         consensus.nPowTargetSpacing = 10 * 60;
@@ -114,12 +114,12 @@ public:
         consensus.enableStakingRewards = true;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork =
+        consensus.nMinimumChainWork = uint256S("00");
             ChainParamsConstants::MAINNET_MINIMUM_CHAIN_WORK;
 
         // By default assume that the signatures in ancestors of this block are
         // valid.
-        consensus.defaultAssumeValid =
+        consensus.defaultAssumeValid = BlockHash();
             ChainParamsConstants::MAINNET_DEFAULT_ASSUME_VALID;
 
         // August 1, 2017 hard fork
@@ -172,10 +172,10 @@ public:
         m_assumed_chain_state_size =
             ChainParamsConstants::MAINNET_ASSUMED_CHAINSTATE_SIZE;
 
-        genesis = CreateGenesisBlock(1231006505, 1742350689, 0x1d00ffff, 1,
+        genesis = CreateGenesisBlock(1231006505, 6452080, 0x1e00ffff, 1,
                                      50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("a26198ed5bf07e509509d1f0fed790cb9f49ea0b5c0ee917bb48dddd682ea8cd"));
+        assert(consensus.hashGenesisBlock == uint256S("00000065a7b5763c6e32b0d1a069327e033a759899117d09513e1a97c8ddfd77"));
         assert(genesis.hashMerkleRoot == uint256S("0ab47e77458e949f2f881f9fbb6b9a49cedc25fcf42edecfc0c7fdf3e50d350e"));
 
         // Note that of those which support the service bits prefix, most only
@@ -264,7 +264,7 @@ public:
         // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
         consensus.CSVHeight = 770112;
         consensus.powLimit = uint256S(
-            "00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            "0000ffff00000000000000000000000000000000000000000000000000000000");  //temp change for mining genesis
         // two weeks
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60;
         consensus.nPowTargetSpacing = 10 * 60;
@@ -281,12 +281,12 @@ public:
         consensus.enableStakingRewards = false;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork =
+        consensus.nMinimumChainWork = uint256S("00");
             ChainParamsConstants::TESTNET_MINIMUM_CHAIN_WORK;
 
         // By default assume that the signatures in ancestors of this block are
         // valid.
-        consensus.defaultAssumeValid =
+        consensus.defaultAssumeValid = BlockHash();
             ChainParamsConstants::TESTNET_DEFAULT_ASSUME_VALID;
 
         // August 1, 2017 hard fork
@@ -335,9 +335,9 @@ public:
             ChainParamsConstants::TESTNET_ASSUMED_CHAINSTATE_SIZE;
 
         genesis =
-            CreateGenesisBlock(1296688602, 744323590, 0x1d00ffff, 1, 50 * COIN);
+            CreateGenesisBlock(1296688602, 10239668, 0x1e00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-	assert(consensus.hashGenesisBlock == uint256S("483346800eb805b5f19a833b8cce5b273e5a83f47f81f280c06645f993d6892a"));
+	assert(consensus.hashGenesisBlock == uint256S("00000070d733510cd575cabb9c1245f267c55ba0a8750fe19064398b3ab45f5a"));
         assert(genesis.hashMerkleRoot == uint256S("0ab47e77458e949f2f881f9fbb6b9a49cedc25fcf42edecfc0c7fdf3e50d350e"));
 
         vFixedSeeds.clear();

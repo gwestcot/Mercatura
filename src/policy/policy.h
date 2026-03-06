@@ -27,7 +27,7 @@ static constexpr uint64_t DEFAULT_MAX_GENERATED_BLOCK_SIZE{2 * ONE_MEGABYTE};
  * Default for -blockmintxfee, which sets the minimum feerate for a transaction
  * in blocks created by mining code.
  */
-static constexpr Amount DEFAULT_BLOCK_MIN_TX_FEE_PER_KB(1000 * SATOSHI);
+static constexpr Amount DEFAULT_BLOCK_MIN_TX_FEE_PER_KB(1 * SATOSHI);
 /**
  * The maximum size for transactions we're willing to relay/mine.
  */
@@ -47,7 +47,7 @@ static constexpr unsigned int MAX_TX_IN_SCRIPT_SIG_SIZE{1650};
  * Default for -incrementalrelayfee, which sets the minimum feerate increase for
  * mempool limiting or BIP 125 replacement.
  */
-static constexpr CFeeRate MEMPOOL_FULL_FEE_INCREMENT(1000 * SATOSHI);
+static constexpr CFeeRate MEMPOOL_FULL_FEE_INCREMENT(1 * SATOSHI);
 /**
  * Default for -bytespersigcheck .
  */
@@ -61,10 +61,10 @@ static constexpr bool DEFAULT_PERMIT_BAREMULTISIG{true};
  * only increase the dust limit after prior releases were already not creating
  * outputs below the new threshold.
  */
-static constexpr Amount DUST_RELAY_TX_FEE(1000 * SATOSHI);
+static constexpr Amount DUST_RELAY_TX_FEE(1 * SATOSHI);
 
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
-static constexpr Amount DEFAULT_MIN_RELAY_TX_FEE_PER_KB(1000 * SATOSHI);
+static constexpr Amount DEFAULT_MIN_RELAY_TX_FEE_PER_KB(1 * SATOSHI);
 
 /**
  * When transactions fail script evaluations under standard flags, this flagset

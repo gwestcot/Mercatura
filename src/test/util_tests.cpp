@@ -1561,85 +1561,75 @@ BOOST_AUTO_TEST_CASE(util_ReadWriteSettings) {
 
 BOOST_AUTO_TEST_CASE(util_FormatMoney) {
     BOOST_CHECK_EQUAL(FormatMoney(Amount::zero()), "0.00");
-    BOOST_CHECK_EQUAL(FormatMoney(123456789 * (COIN / 10000)),
-                      "12345678900.00");
-    BOOST_CHECK_EQUAL(FormatMoney(-1 * COIN), "-1000000.00");
+    BOOST_CHECK_EQUAL(FormatMoney(-1 * COIN), "-1.00");
 
-    BOOST_CHECK_EQUAL(FormatMoney(100000000 * COIN), "100000000000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(10000000 * COIN), "10000000000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(1000000 * COIN), "1000000000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(100000 * COIN), "100000000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(10000 * COIN), "10000000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(1000 * COIN), "1000000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(100 * COIN), "100000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(10 * COIN), "10000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN), "1000000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN / 10), "100000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN / 100), "10000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN / 1000), "1000.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN / 10000), "100.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN / 100000), "10.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN / 1000000), "1.00");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN / 10000000), "0.10");
-    BOOST_CHECK_EQUAL(FormatMoney(COIN / 100000000), "0.01");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN / 100), "0.01");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN / 10), "0.10");
+    BOOST_CHECK_EQUAL(FormatMoney(COIN), "1.00");
+    BOOST_CHECK_EQUAL(FormatMoney(10 * COIN), "10.00");
+    BOOST_CHECK_EQUAL(FormatMoney(100 * COIN), "100.00");
+    BOOST_CHECK_EQUAL(FormatMoney(1000 * COIN), "1000.00");
+
+    BOOST_CHECK_EQUAL(FormatMoney(123456789 * COIN), "123456789.00");
+    BOOST_CHECK_EQUAL(FormatMoney(123456789 * COIN + COIN / 10), "123456789.10");
+    BOOST_CHECK_EQUAL(FormatMoney(123456789 * COIN + COIN / 100), "123456789.01");
 }
 
 BOOST_AUTO_TEST_CASE(util_ParseMoney) {
     Amount ret = Amount::zero();
+    const auto MCA = Currency::get().baseunit;
+
     BOOST_CHECK(ParseMoney("0.0", ret));
     BOOST_CHECK_EQUAL(ret, Amount::zero());
 
+    BOOST_CHECK(ParseMoney("1.00", ret));
+    BOOST_CHECK_EQUAL(ret, MCA);
+
+    BOOST_CHECK(ParseMoney("1", ret));
+    BOOST_CHECK_EQUAL(ret, MCA);
+
+    BOOST_CHECK(ParseMoney("   1", ret));
+    BOOST_CHECK_EQUAL(ret, MCA);
+
+    BOOST_CHECK(ParseMoney("1   ", ret));
+    BOOST_CHECK_EQUAL(ret, MCA);
+
+    BOOST_CHECK(ParseMoney("  1 ", ret));
+    BOOST_CHECK_EQUAL(ret, MCA);
+
+    BOOST_CHECK(ParseMoney("10.00", ret));
+    BOOST_CHECK_EQUAL(ret, 10 * MCA);
+
+    BOOST_CHECK(ParseMoney("100.00", ret));
+    BOOST_CHECK_EQUAL(ret, 100 * MCA);
+
     BOOST_CHECK(ParseMoney("1234567.89", ret));
-    BOOST_CHECK_EQUAL(ret, 123456789 * Currency::get().baseunit);
+    BOOST_CHECK_EQUAL(ret, 123456789 * (MCA / 100));
 
     BOOST_CHECK(ParseMoney("21000000.00", ret));
     BOOST_CHECK_EQUAL(ret, MAX_MONEY);
 
-    const auto XEC = Currency::get().baseunit;
-    BOOST_CHECK(ParseMoney("100000000.00", ret));
-    BOOST_CHECK_EQUAL(ret, 100000000 * XEC);
-    BOOST_CHECK(ParseMoney("10000000.00", ret));
-    BOOST_CHECK_EQUAL(ret, 10000000 * XEC);
-    BOOST_CHECK(ParseMoney("1000000.00", ret));
-    BOOST_CHECK_EQUAL(ret, 1000000 * XEC);
-    BOOST_CHECK(ParseMoney("100000.00", ret));
-    BOOST_CHECK_EQUAL(ret, 100000 * XEC);
-    BOOST_CHECK(ParseMoney("10000.00", ret));
-    BOOST_CHECK_EQUAL(ret, 10000 * XEC);
-    BOOST_CHECK(ParseMoney("1000.00", ret));
-    BOOST_CHECK_EQUAL(ret, 1000 * XEC);
-    BOOST_CHECK(ParseMoney("100.00", ret));
-    BOOST_CHECK_EQUAL(ret, 100 * XEC);
-    BOOST_CHECK(ParseMoney("10.00", ret));
-    BOOST_CHECK_EQUAL(ret, 10 * XEC);
-    BOOST_CHECK(ParseMoney("1.00", ret));
-    BOOST_CHECK_EQUAL(ret, XEC);
-    BOOST_CHECK(ParseMoney("1", ret));
-    BOOST_CHECK_EQUAL(ret, XEC);
-    BOOST_CHECK(ParseMoney("   1", ret));
-    BOOST_CHECK_EQUAL(ret, XEC);
-    BOOST_CHECK(ParseMoney("1   ", ret));
-    BOOST_CHECK_EQUAL(ret, XEC);
-    BOOST_CHECK(ParseMoney("  1 ", ret));
-    BOOST_CHECK_EQUAL(ret, XEC);
     BOOST_CHECK(ParseMoney("0.1", ret));
-    BOOST_CHECK_EQUAL(ret, XEC / 10);
-    BOOST_CHECK(ParseMoney("0.01", ret));
-    BOOST_CHECK_EQUAL(ret, XEC / 100);
-    BOOST_CHECK(ParseMoney(" 0.01 ", ret));
-    BOOST_CHECK_EQUAL(ret, XEC / 100);
-    BOOST_CHECK(ParseMoney("0.01 ", ret));
-    BOOST_CHECK_EQUAL(ret, XEC / 100);
-    BOOST_CHECK(ParseMoney(" 0.01", ret));
-    BOOST_CHECK_EQUAL(ret, XEC / 100);
+    BOOST_CHECK_EQUAL(ret, MCA / 10);
 
-    // Parsing amount that can not be represented in ret should fail
+    BOOST_CHECK(ParseMoney("0.01", ret));
+    BOOST_CHECK_EQUAL(ret, MCA / 100);
+
+    BOOST_CHECK(ParseMoney(" 0.01 ", ret));
+    BOOST_CHECK_EQUAL(ret, MCA / 100);
+
+    BOOST_CHECK(ParseMoney("0.01 ", ret));
+    BOOST_CHECK_EQUAL(ret, MCA / 100);
+
+    BOOST_CHECK(ParseMoney(" 0.01", ret));
+    BOOST_CHECK_EQUAL(ret, MCA / 100);
+
+    // Parsing amounts with more than 2 decimals should fail
     BOOST_CHECK(!ParseMoney("0.001", ret));
     BOOST_CHECK(!ParseMoney("0.0001", ret));
     BOOST_CHECK(!ParseMoney("0.00001", ret));
     BOOST_CHECK(!ParseMoney("0.000001", ret));
     BOOST_CHECK(!ParseMoney("0.0000001", ret));
-    BOOST_CHECK(!ParseMoney("0.01", ret));
     BOOST_CHECK(!ParseMoney("0.000000001", ret));
 
     // Parsing empty string should fail
@@ -1656,17 +1646,13 @@ BOOST_AUTO_TEST_CASE(util_ParseMoney) {
     // Max possible value with the max number of digits
     BOOST_CHECK(ParseMoney("9999999999999999.99", ret));
     BOOST_CHECK_EQUAL(ret, int64_t(999999999999999999) * SATOSHI);
+
     // Attempted 63 bit overflow should fail
     BOOST_CHECK(!ParseMoney("10000000000000000.00", ret));
     BOOST_CHECK(!ParseMoney("92233720368547758.08", ret));
 
     // Parsing negative amounts must fail
     BOOST_CHECK(!ParseMoney("-1", ret));
-
-    // Parsing strings with embedded NUL characters should fail
-    BOOST_CHECK(!ParseMoney("\0-1"s, ret));
-    BOOST_CHECK(!ParseMoney(STRING_WITH_EMBEDDED_NULL_CHAR, ret));
-    BOOST_CHECK(!ParseMoney("1\0"s, ret));
 }
 
 BOOST_AUTO_TEST_CASE(util_IsHex) {

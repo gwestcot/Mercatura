@@ -99,7 +99,7 @@ constexpr Amount DEFAULT_PAY_TX_FEE = Amount::zero();
 //! -fallbackfee default
 static const Amount DEFAULT_FALLBACK_FEE = Amount::zero();
 //! -mintxfee default
-static const Amount DEFAULT_TRANSACTION_MINFEE_PER_KB = 1000 * SATOSHI;
+static const Amount DEFAULT_TRANSACTION_MINFEE_PER_KB = 1 * SATOSHI;
 /**
  * maximum fee increase allowed to do partial spend avoidance, even for nodes
  * with this feature disabled by default
@@ -112,17 +112,17 @@ static const Amount DEFAULT_TRANSACTION_MINFEE_PER_KB = 1000 * SATOSHI;
  */
 static const Amount DEFAULT_MAX_AVOIDPARTIALSPEND_FEE = Amount::zero();
 //! discourage APS fee higher than this amount
-constexpr Amount HIGH_APS_FEE{COIN / 10000};
+constexpr Amount HIGH_APS_FEE{1 * SATOSHI};
 //! minimum recommended increment for BIP 125 replacement txs
-static const Amount WALLET_INCREMENTAL_RELAY_FEE(5000 * SATOSHI);
+static const Amount WALLET_INCREMENTAL_RELAY_FEE(1 * SATOSHI);
 //! Default for -spendzeroconfchange
 static const bool DEFAULT_SPEND_ZEROCONF_CHANGE = true;
 static const bool DEFAULT_WALLETBROADCAST = true;
 static const bool DEFAULT_DISABLE_WALLET = false;
 //! -maxtxfee default
-constexpr Amount DEFAULT_TRANSACTION_MAXFEE{COIN / 10};
+constexpr Amount DEFAULT_TRANSACTION_MAXFEE{10 * COIN};
 //! Discourage users to set fees higher than this amount (in satoshis) per kB
-constexpr Amount HIGH_TX_FEE_PER_KB{COIN / 100};
+constexpr Amount HIGH_TX_FEE_PER_KB{10 * SATOSHI};
 //! -maxtxfee will warn if called with a higher fee than this amount (in
 //! satoshis)
 constexpr Amount HIGH_MAX_TX_FEE{100 * HIGH_TX_FEE_PER_KB};
