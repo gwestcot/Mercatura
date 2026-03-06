@@ -32,7 +32,7 @@
 
 namespace fuzzer {
 // FIXME find a better way to avoid duplicating the MAX_MONEY definition
-constexpr int64_t MAX_MONEY_AS_INT = int64_t(21000000) * int64_t(100000000);
+constexpr int64_t MAX_MONEY_AS_INT = int64_t(21000000) * int64_t(100);
 } // end namespace fuzzer
 
 using namespace fuzzer;

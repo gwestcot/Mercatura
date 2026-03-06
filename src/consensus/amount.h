@@ -146,7 +146,7 @@ public:
 };
 
 static constexpr Amount SATOSHI = Amount::satoshi();
-static constexpr Amount COIN = 100000000 * SATOSHI;
+static constexpr Amount COIN = 100 * SATOSHI;
 
 struct Currency {
     Amount baseunit;

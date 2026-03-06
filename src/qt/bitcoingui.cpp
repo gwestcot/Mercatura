@@ -261,7 +261,7 @@ void BitcoinGUI::createActions() {
 
     sendCoinsAction = new QAction(
         platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
-    sendCoinsAction->setStatusTip(tr("Send coins to a Bitcoin address"));
+    sendCoinsAction->setStatusTip(tr("Send coins to a Mercatura address"));
     sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
     sendCoinsAction->setCheckable(true);
     sendCoinsAction->setShortcut(QKeySequence(QStringLiteral("Alt+2")));
@@ -339,7 +339,7 @@ void BitcoinGUI::createActions() {
         tr("Change the passphrase used for wallet encryption"));
     signMessageAction = new QAction(tr("Sign &message..."), this);
     signMessageAction->setStatusTip(
-        tr("Sign messages with your Bitcoin addresses to prove you own them"));
+        tr("Sign messages with your Mercatura addresses to prove you own them"));
     verifyMessageAction = new QAction(tr("&Verify message..."), this);
     verifyMessageAction->setStatusTip(
         tr("Verify messages to ensure they were signed with specified Bitcoin "
@@ -1055,7 +1055,7 @@ void BitcoinGUI::updateNetworkState() {
     QString tooltip;
 
     if (m_node.getNetworkActive()) {
-        tooltip = tr("%n active connection(s) to Bitcoin network", "", count) +
+        tooltip = tr("%n active connection(s) to Mercatura network", "", count) +
                   QString(".<br>") + tr("Click to disable network activity.");
     } else {
         tooltip = tr("Network activity disabled.") + QString("<br>") +

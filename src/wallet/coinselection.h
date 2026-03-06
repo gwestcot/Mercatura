@@ -12,7 +12,7 @@
 //! target minimum change amount
 static constexpr Amount MIN_CHANGE{COIN / 100};
 //! final minimum change amount after paying for fees
-static const Amount MIN_FINAL_CHANGE = MIN_CHANGE / 2;
+static const Amount MIN_FINAL_CHANGE = MIN_CHANGE;
 
 class CInputCoin {
 public:

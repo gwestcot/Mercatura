@@ -721,8 +721,11 @@ add_library(server
 target_include_directories(server PRIVATE leveldb/helpers/memenv)
 
 target_link_libraries(server
-	bitcoinconsensus
-	leveldb
+        bitcoinconsensus
+        leveldb
+        event_core
+        event_extra
+        event_pthreads
 )
 
 link_event(server event)
@@ -820,7 +823,7 @@ if(BUILD_CLI)
 		DESCRIPTION "JSON-RPC client for ${PACKAGE_NAME}"
 	)
 
-	target_link_libraries(bitcoin-cli common rpcclient)
+	target_link_libraries(bitcoin-cli common rpcclient event_core event_extra event_pthreads)
 	link_event(bitcoin-cli event)
 
 	add_to_symbols_check(bitcoin-cli)
@@ -1022,6 +1025,9 @@ endif()
 
 # bitcoind
 add_executable(bitcoind bitcoind.cpp)
+add_executable(genesis_miner genesis_miner.cpp)
+target_include_directories(genesis_miner PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(genesis_miner PRIVATE common)
 target_link_libraries(bitcoind server)
 generate_windows_version_info(bitcoind
 	DESCRIPTION "Bitcoin node with a JSON-RPC server"

@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_CASE(minerfund_whitelist) {
 
     const std::unordered_set<CTxDestination, TxDestinationHasher>
         expectedMinerFund = {DecodeDestination(
-            "ecash:prfhcnyqnl5cgrnmlfmms675w93ld7mvvqd0y8lz07", chainparams)};
+            "mca:prfhcnyqnl5cgrnmlfmms675w93ld7mvvqrn0tvxjl", chainparams)};
     CheckWhitelist(consensusParams, &blocks[0], expectedMinerFund);
 
     // Test address does not change around Wellington activation

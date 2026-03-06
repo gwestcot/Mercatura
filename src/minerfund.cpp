@@ -37,7 +37,7 @@ static CTxDestination BuildDestination(const std::string &dest) {
 
 static const CTxDestination &GetMinerFundDestination() {
     static const std::string ecashMinerFund =
-        "ecash:prfhcnyqnl5cgrnmlfmms675w93ld7mvvqd0y8lz07";
+        "mca:prfhcnyqnl5cgrnmlfmms675w93ld7mvvqrn0tvxjl";
     static const std::string bitcoinCashMinerFund =
         "bitcoincash:prfhcnyqnl5cgrnmlfmms675w93ld7mvvq5zsvycff";
     static CTxDestination dest = BuildDestination(

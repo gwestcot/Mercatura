@@ -23,16 +23,16 @@ using unitNameMap =
     >;
 static const unitNameMap xecUnits = {
     {BitcoinUnits::Unit::base,
-        {"XEC",
-        "eCash"}},
+        {"MCA",
+        "Mercatura"}},
     {BitcoinUnits::Unit::sub,
         {"Satoshi (sat)",
         "Satoshi (sat) (1 / 100)"}},
 };
 static const unitNameMap bchUnits = {
     {BitcoinUnits::Unit::base,
-        {"BCHA",
-        "Bitcoins"}},
+        {"MCA",
+        "Mercatura"}},
     {BitcoinUnits::Unit::sub,
         {"Satoshi (sat)",
         "Satoshi (sat) (1 / 100" THIN_SP_UTF8 "000" THIN_SP_UTF8 "000)"}},

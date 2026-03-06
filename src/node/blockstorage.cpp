@@ -942,23 +942,19 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo &blockundo,
 bool BlockManager::ReadBlock(CBlock &block, const FlatFilePos &pos) const {
     block.SetNull();
 
-    // Open history file to read
     AutoFile filein{OpenBlockFile(pos, true)};
     if (filein.IsNull()) {
         LogError("ReadBlock: OpenBlockFile failed for %s\n", pos.ToString());
         return false;
     }
 
-    // Read block
     try {
         filein >> block;
     } catch (const std::exception &e) {
-        LogError("%s: Deserialize or I/O error - %s at %s\n", __func__,
-                 e.what(), pos.ToString());
+        LogError("ReadBlock: Deserialize failed for %s (%s)\n", pos.ToString(), e.what());
         return false;
     }
 
-    // Check the header
     if (!CheckProofOfWork(block.GetHash(), block.nBits, GetConsensus())) {
         LogError("ReadBlock: Errors in block header at %s\n", pos.ToString());
         return false;
@@ -967,7 +963,9 @@ bool BlockManager::ReadBlock(CBlock &block, const FlatFilePos &pos) const {
     return true;
 }
 
-bool BlockManager::ReadBlock(CBlock &block, const CBlockIndex &index) const {
+
+bool node::BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
+{
     const FlatFilePos block_pos{WITH_LOCK(cs_main, return index.GetBlockPos())};
 
     if (!ReadBlock(block, block_pos)) {
@@ -975,8 +973,7 @@ bool BlockManager::ReadBlock(CBlock &block, const CBlockIndex &index) const {
     }
 
     if (block.GetHash() != index.GetBlockHash()) {
-        LogError("ReadBlock(CBlock&, CBlockIndex*): GetHash() "
-                 "doesn't match index for %s at %s\n",
+        LogError("ReadBlock(CBlock&, CBlockIndex*): GetHash() doesn\x27t match index for %s at %s\n",
                  index.ToString(), block_pos.ToString());
         return false;
     }

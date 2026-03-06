@@ -371,7 +371,7 @@ static RPCHelpMan decodeavalancheproof() {
                       "addresses",
                       "",
                       {
-                          {RPCResult::Type::STR, "address", "eCash address"},
+                          {RPCResult::Type::STR, "address", "MCA address"},
                       }},
                  }},
                 {RPCResult::Type::STR_HEX, "limitedid",
@@ -1019,7 +1019,7 @@ static RPCHelpMan getstakingreward() {
                       "addresses",
                       "",
                       {
-                          {RPCResult::Type::STR, "address", "eCash address"},
+                          {RPCResult::Type::STR, "address", "MCA address"},
                       }},
                  }},
             }},
@@ -1767,7 +1767,7 @@ static RPCHelpMan getflakyproofs() {
                           "",
                           {
                               {RPCResult::Type::STR, "address",
-                               "eCash address"},
+                               "MCA address"},
                           }},
                      }},
                 }},

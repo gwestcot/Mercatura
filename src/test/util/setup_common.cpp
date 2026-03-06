@@ -52,6 +52,9 @@
 #include <validation.h>
 #include <validationinterface.h>
 #include <walletinitinterface.h>
+#include <mutex>
+#include <iostream>
+
 
 #include <test/util/mining.h>
 #include <test/util/random.h>
@@ -105,14 +108,26 @@ BasicTestingSetup::BasicTestingSetup(
     m_args.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     gArgs.ForceSetArg("-datadir", fs::PathToString(m_path_root));
     gArgs.ClearPathCache();
-    {
-        SetupServerArgs(m_node);
-        std::string error;
-        const bool success{m_node.args->ParseParameters(
-            arguments.size(), arguments.data(), error)};
-        assert(success);
-        assert(error.empty());
+
+    // Use per-fixture ArgsManager (avoids call_once + dangling/null node.args)
+    m_node.args = &m_args;
+    SetupServerArgs(m_node);
+
+    std::string error;
+    const bool success{m_args.ParseParameters(
+        arguments.size(), arguments.data(), error)};
+
+    if (!success || !error.empty()) {
+        std::cerr << "ParseParameters failed. success=" << success
+                  << " error=\"" << error << "\"\n";
+
+    std::cerr << "Args passed:\n";
+    for (size_t i = 0; i < arguments.size(); ++i) {
+        std::cerr << "  [" << i << "] " << arguments[i] << "\n";
     }
+
+    std::abort();
+}
 
     // Use randomly chosen seed for deterministic PRNG, so that (by default)
     // test data directories use a random name that doesn't overlap with other
@@ -120,9 +135,14 @@ BasicTestingSetup::BasicTestingSetup(
     SeedRandomForTest(SeedRand::SEED);
 
     SelectParams(chainType);
-    InitLogging(*m_node.args);
-    AppInitParameterInteraction(config, *m_node.args);
-    LogInstance().StartLogging();
+
+    static std::once_flag once_logging;
+    std::call_once(once_logging, [&] {
+        InitLogging(*m_node.args);
+        AppInitParameterInteraction(config, *m_node.args);
+        LogInstance().StartLogging();
+    });
+
     m_node.kernel = std::make_unique<kernel::Context>();
     SetupEnvironment();
     SetupNetworking();
@@ -139,9 +159,13 @@ BasicTestingSetup::BasicTestingSetup(
 
 BasicTestingSetup::~BasicTestingSetup() {
     LogInstance().DisconnectTestLogger();
-    fs::remove_all(m_path_root);
+    // TEMP: keep the test datadir for debugging failures
+    std::cout << "Keeping test datadir: " << fs::PathToString(m_path_root) << std::endl;
+    // fs::remove_all(m_path_root);
+
     gArgs.ClearArgs();
 }
+
 CTxMemPool::Options MemPoolOptionsForTest(const NodeContext &node) {
     CTxMemPool::Options mempool_opts{
         // Default to always checking mempool regardless of

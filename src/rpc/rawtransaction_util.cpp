@@ -137,7 +137,7 @@ CMutableTransaction ConstructTransaction(const CChainParams &params,
             CTxDestination destination = DecodeDestination(name_, params);
             if (!IsValidDestination(destination)) {
                 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
-                                   std::string("Invalid Bitcoin address: ") +
+                                   std::string("Invalid Mercatura address: ") +
                                        name_);
             }
 
@@ -367,7 +367,7 @@ std::vector<RPCResult> DecodeTxDoc(const std::string &txid_field_doc,
                             {
                                 {RPCResult::Type::STR, "address",
                                  /*optional=*/true,
-                                 "The eCash address (only if a well-defined "
+                                 "The MCA address (only if a well-defined "
                                  "address exists)"},
                             }},
                        }},

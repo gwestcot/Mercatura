@@ -17,7 +17,7 @@ from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_equal
 from test_framework.wallet import MiniWallet
 
-# MAX_MONEY as a string is "21000000000000.00 XEC"
+# MAX_MONEY as a string is "21000000.00 XEC"
 MAX_AMOUNT_LENGTH = 22
 
 utxocache_changes_add_spent_program = """

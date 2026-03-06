@@ -97,7 +97,7 @@ public:
         // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
         consensus.CSVHeight = 419328;
         consensus.powLimit = uint256S(
-            "00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            "0000ffff00000000000000000000000000000000000000000000000000000000");  //temporary change for mining genesis
         // two weeks
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60;
         consensus.nPowTargetSpacing = 10 * 60;
@@ -114,12 +114,12 @@ public:
         consensus.enableStakingRewards = true;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork =
+        consensus.nMinimumChainWork = uint256S("00");
             ChainParamsConstants::MAINNET_MINIMUM_CHAIN_WORK;
 
         // By default assume that the signatures in ancestors of this block are
         // valid.
-        consensus.defaultAssumeValid =
+        consensus.defaultAssumeValid = BlockHash();
             ChainParamsConstants::MAINNET_DEFAULT_ASSUME_VALID;
 
         // August 1, 2017 hard fork
@@ -157,30 +157,26 @@ public:
          * normal data. The characters are rarely used upper ASCII, not valid as
          * UTF-8, and produce a large 32-bit integer with any alignment.
          */
-        diskMagic[0] = 0xf9;
-        diskMagic[1] = 0xbe;
-        diskMagic[2] = 0xb4;
-        diskMagic[3] = 0xd9;
-        netMagic[0] = 0xe3;
-        netMagic[1] = 0xe1;
-        netMagic[2] = 0xf3;
-        netMagic[3] = 0xe8;
-        nDefaultPort = 8333;
+        diskMagic[0] = 0x4d;
+        diskMagic[1] = 0x43;
+        diskMagic[2] = 0x41;
+        diskMagic[3] = 0x01;
+        netMagic[0] = 0x4d;
+        netMagic[1] = 0x43;
+        netMagic[2] = 0x41;
+        netMagic[3] = 0x01;
+        nDefaultPort = 19444; //main
         nPruneAfterHeight = 100000;
         m_assumed_blockchain_size =
             ChainParamsConstants::MAINNET_ASSUMED_BLOCKCHAIN_SIZE;
         m_assumed_chain_state_size =
             ChainParamsConstants::MAINNET_ASSUMED_CHAINSTATE_SIZE;
 
-        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1,
+        genesis = CreateGenesisBlock(1231006505, 6452080, 0x1e00ffff, 1,
                                      50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock ==
-               uint256S("000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1"
-                        "b60a8ce26f"));
-        assert(genesis.hashMerkleRoot ==
-               uint256S("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b"
-                        "7afdeda33b"));
+        assert(consensus.hashGenesisBlock == uint256S("00000065a7b5763c6e32b0d1a069327e033a759899117d09513e1a97c8ddfd77"));
+        assert(genesis.hashMerkleRoot == uint256S("0ab47e77458e949f2f881f9fbb6b9a49cedc25fcf42edecfc0c7fdf3e50d350e"));
 
         // Note that of those which support the service bits prefix, most only
         // support a subset of possible options. This is fine at runtime as
@@ -195,12 +191,12 @@ public:
         // status.cash
         vSeeds.emplace_back("seeder.status.cash");
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 0);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 5);
-        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 128);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 50);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 55);
+        base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 178);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
-        cashaddrPrefix = opts.ecash ? "ecash" : "bitcoincash";
+	cashaddrPrefix = "mca";
 
         vFixedSeeds = std::vector<SeedSpec6>(std::begin(pnSeed6_main),
                                              std::end(pnSeed6_main));
@@ -268,7 +264,7 @@ public:
         // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
         consensus.CSVHeight = 770112;
         consensus.powLimit = uint256S(
-            "00000000ffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+            "0000ffff00000000000000000000000000000000000000000000000000000000");  //temp change for mining genesis
         // two weeks
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60;
         consensus.nPowTargetSpacing = 10 * 60;
@@ -285,12 +281,12 @@ public:
         consensus.enableStakingRewards = false;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork =
+        consensus.nMinimumChainWork = uint256S("00");
             ChainParamsConstants::TESTNET_MINIMUM_CHAIN_WORK;
 
         // By default assume that the signatures in ancestors of this block are
         // valid.
-        consensus.defaultAssumeValid =
+        consensus.defaultAssumeValid = BlockHash();
             ChainParamsConstants::TESTNET_DEFAULT_ASSUME_VALID;
 
         // August 1, 2017 hard fork
@@ -323,15 +319,15 @@ public:
         // May 15, 2026 12:00:00 UTC protocol upgrade
         consensus.obolenskyActivationTime = 1778846400;
 
-        diskMagic[0] = 0x0b;
-        diskMagic[1] = 0x11;
-        diskMagic[2] = 0x09;
-        diskMagic[3] = 0x07;
-        netMagic[0] = 0xf4;
-        netMagic[1] = 0xe5;
-        netMagic[2] = 0xf3;
-        netMagic[3] = 0xf4;
-        nDefaultPort = 18333;
+        diskMagic[0] = 0x4d;
+        diskMagic[1] = 0x43;
+        diskMagic[2] = 0x41;
+        diskMagic[3] = 0x02;
+        netMagic[0] = 0x4d;
+        netMagic[1] = 0x43;
+        netMagic[2] = 0x41;
+        netMagic[3] = 0x02;
+        nDefaultPort = 29444;  //test
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size =
             ChainParamsConstants::TESTNET_ASSUMED_BLOCKCHAIN_SIZE;
@@ -339,14 +335,10 @@ public:
             ChainParamsConstants::TESTNET_ASSUMED_CHAINSTATE_SIZE;
 
         genesis =
-            CreateGenesisBlock(1296688602, 414098458, 0x1d00ffff, 1, 50 * COIN);
+            CreateGenesisBlock(1296688602, 10239668, 0x1e00ffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock ==
-               uint256S("000000000933ea01ad0ee984209779baaec3ced90fa3f408719526"
-                        "f8d77f4943"));
-        assert(genesis.hashMerkleRoot ==
-               uint256S("4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b"
-                        "7afdeda33b"));
+	assert(consensus.hashGenesisBlock == uint256S("00000070d733510cd575cabb9c1245f267c55ba0a8750fe19064398b3ab45f5a"));
+        assert(genesis.hashMerkleRoot == uint256S("0ab47e77458e949f2f881f9fbb6b9a49cedc25fcf42edecfc0c7fdf3e50d350e"));
 
         vFixedSeeds.clear();
         vSeeds.clear();
@@ -358,12 +350,12 @@ public:
         // status.cash
         vSeeds.emplace_back("testnet-seeder.status.cash");
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 58);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 122);
         base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
-        cashaddrPrefix = opts.ecash ? "ectest" : "bchtest";
+	cashaddrPrefix = "mcatest";
 
         vFixedSeeds = std::vector<SeedSpec6>(std::begin(pnSeed6_test),
                                              std::end(pnSeed6_test));
@@ -476,27 +468,26 @@ public:
         // May 15, 2026 12:00:00 UTC protocol upgrade
         consensus.obolenskyActivationTime = 1778846400;
 
-        diskMagic[0] = 0xfa;
-        diskMagic[1] = 0xbf;
-        diskMagic[2] = 0xb5;
-        diskMagic[3] = 0xda;
-        netMagic[0] = 0xda;
-        netMagic[1] = 0xb5;
-        netMagic[2] = 0xbf;
-        netMagic[3] = 0xfa;
-        nDefaultPort = 18444;
+        diskMagic[0] = 0x4d;
+        diskMagic[1] = 0x43;
+        diskMagic[2] = 0x41;
+        diskMagic[3] = 0x03;
+        netMagic[0] = 0x4d;
+        netMagic[1] = 0x43;
+        netMagic[2] = 0x41;
+        netMagic[3] = 0x03;
+        nDefaultPort = 39444;  //reg
         nPruneAfterHeight = opts.fastprune ? 100 : 1000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
         genesis = CreateGenesisBlock(1296688602, 2, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock ==
-               uint256S("0x0f9188f13cb7b2c71f2a335e3a4fc328bf5beb436012afca590b"
-                        "1a11466e2206"));
+	assert(consensus.hashGenesisBlock ==
+               uint256S("50381042e5712ade3568a7426b8c3f1da8c9ed35946339b820057a3c5ab41ac4"));
+
         assert(genesis.hashMerkleRoot ==
-               uint256S("0x4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab212"
-                        "7b7afdeda33b"));
+               uint256S("0ab47e77458e949f2f881f9fbb6b9a49cedc25fcf42edecfc0c7fdf3e50d350e"));
 
         //! Regtest mode doesn't have any fixed seeds.
         vFixedSeeds.clear();
@@ -532,12 +523,12 @@ public:
 
         chainTxData = ChainTxData{0, 0, 0};
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 111);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 196);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<uint8_t>(1, 58);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<uint8_t>(1, 122);
         base58Prefixes[SECRET_KEY] = std::vector<uint8_t>(1, 239);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
-        cashaddrPrefix = opts.ecash ? "ecregtest" : "bchreg";
+	cashaddrPrefix = "mcaregtest";
     }
 };
 
