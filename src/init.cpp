@@ -782,7 +782,7 @@ void SetupServerArgs(NodeContext &node) {
         "-chronikelectrumdonationaddress",
         strprintf(
             "The server donation address. No checks are done on the server "
-            "side to ensure this is a valid eCash address, it is just relayed "
+            "side to ensure this is a valid MCA address, it is just relayed "
             "to clients verbatim as a text string (%u characters maximum).",
             chronik::MAX_LENGTH_DONATION_ADDRESS),
         ArgsManager::ALLOW_ANY | ArgsManager::DISALLOW_NEGATION,
@@ -2958,7 +2958,7 @@ bool AppInitMain(Config &config, RPCServer &rpcServer,
     const auto BadPortWarning = [](const char *prefix, uint16_t port) {
         return strprintf(_("%s request to listen on port %u. This port is "
                            "considered \"bad\" and "
-                           "thus it is unlikely that any Bitcoin ABC peers "
+                           "thus it is unlikely that any Mercatura peers "
                            "connect to it. See "
                            "doc/p2p-bad-ports.md for details and a full list."),
                          prefix, port);
