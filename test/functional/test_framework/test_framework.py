@@ -979,9 +979,7 @@ class BitcoinTestFramework(metaclass=BitcoinTestMetaClass):
             # old tip age).
             # This is needed so that we are out of IBD when the test starts,
             # see the tip age check in IsInitialBlockDownload().
-            gen_addresses = [k.address for k in TestNode.PRIV_KEYS][:3] + [
-                ADDRESS_ECREG_P2SH_OP_TRUE
-            ]
+            gen_addresses = [ADDRESS_ECREG_P2SH_OP_TRUE] * 4
             assert_equal(len(gen_addresses), 4)
             for i in range(8):
                 self.generatetoaddress(
