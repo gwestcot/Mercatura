@@ -17,6 +17,7 @@
 #include <pow/eda.h>
 #include <pow/grasberg.h>
 #include <primitives/blockhash.h>
+#include <primitives/block.h>
 
 uint32_t GetNextWorkRequired(const CBlockIndex *pindexPrev,
                              const CBlockHeader *pblock,
@@ -91,7 +92,6 @@ bool CheckProofOfWork(const BlockHash &hash, uint32_t nBits,
         return false;
     }
 
-    // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget) {
         return false;
     }

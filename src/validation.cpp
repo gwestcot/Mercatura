@@ -4343,8 +4343,10 @@ static bool CheckBlockHeader(const CBlockHeader &block,
                              const Consensus::Params &params,
                              BlockValidationOptions validationOptions) {
     // Check proof of work matches claimed amount
+
     if (validationOptions.shouldValidatePoW() &&
-        !CheckProofOfWork(block.GetHash(), block.nBits, params)) {
+        !CheckProofOfWork(block.GetPoWHash(), block.nBits, params)) {
+
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
                              "high-hash", "proof of work failed");
     }
@@ -4461,7 +4463,7 @@ bool HasValidProofOfWork(const std::vector<CBlockHeader> &headers,
     return std::all_of(headers.cbegin(), headers.cend(),
                        [&](const auto &header) {
                            return CheckProofOfWork(
-                               header.GetHash(), header.nBits, consensusParams);
+                               header.GetPoWHash(), header.nBits, consensusParams);
                        });
 }
 

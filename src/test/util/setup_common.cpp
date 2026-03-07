@@ -378,7 +378,7 @@ TestChain100Setup::CreateBlock(const std::vector<CMutableTransaction> &txns,
                                 config.GetMaxBlockSize());
 
     const Consensus::Params &params = config.GetChainParams().GetConsensus();
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, params)) {
+    while (!CheckProofOfWork(block.GetPoWHash(), block.nBits, params)) {
         ++block.nNonce;
     }
 

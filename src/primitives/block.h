@@ -49,6 +49,7 @@ public:
     bool IsNull() const { return (nBits == 0); }
 
     BlockHash GetHash() const;
+    BlockHash GetPoWHash() const;
 
     NodeSeconds Time() const {
         return NodeSeconds{std::chrono::seconds{nTime}};

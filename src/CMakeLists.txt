@@ -691,6 +691,7 @@ add_library(server
 	pow/eda.cpp
 	pow/grasberg.cpp
 	pow/pow.cpp
+        pow/scratchpad_pow.cpp
 	rest.cpp
 	rpc/abc.cpp
 	rpc/avalanche.cpp
@@ -908,6 +909,7 @@ if(BUILD_CHAINSTATE)
 		pow/daa.cpp
 		pow/eda.cpp
 		pow/pow.cpp
+                pow/scratchpad_pow.cpp
 		primitives/block.cpp
 		primitives/transaction.cpp
 		pubkey.cpp

@@ -955,7 +955,7 @@ bool BlockManager::ReadBlock(CBlock &block, const FlatFilePos &pos) const {
         return false;
     }
 
-    if (!CheckProofOfWork(block.GetHash(), block.nBits, GetConsensus())) {
+    if (!CheckProofOfWork(block.GetPoWHash(), block.nBits, GetConsensus())) {
         LogError("ReadBlock: Errors in block header at %s\n", pos.ToString());
         return false;
     }

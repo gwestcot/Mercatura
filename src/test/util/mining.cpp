@@ -1,4 +1,4 @@
-// Copyright (c) 2019 The Bitcoin Core developers
+ Copyright (c) 2019 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -35,7 +35,7 @@ CTxIn MineBlock(const Config &config, const NodeContext &node,
                 const CScript &coinbase_scriptPubKey) {
     auto block = PrepareBlock(config, node, coinbase_scriptPubKey);
 
-    while (!CheckProofOfWork(block->GetHash(), block->nBits,
+    while (!CheckProofOfWork(block->GetPoWHash(), block->nBits,
                              config.GetChainParams().GetConsensus())) {
         ++block->nNonce;
         assert(block->nNonce);

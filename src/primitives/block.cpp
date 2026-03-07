@@ -6,10 +6,15 @@
 #include <primitives/block.h>
 
 #include <hash.h>
+#include <pow/scratchpad_pow.h>
 #include <tinyformat.h>
 
 BlockHash CBlockHeader::GetHash() const {
     return BlockHash{(HashWriter{} << *this).GetHash()};
+}
+
+BlockHash CBlockHeader::GetPoWHash() const {
+    return ComputeScratchpadPoWHash(*this);
 }
 
 std::string CBlock::ToString() const {
