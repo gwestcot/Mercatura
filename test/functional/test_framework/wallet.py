@@ -34,7 +34,7 @@ from test_framework.util import (
     satoshi_round,
 )
 
-DEFAULT_FEE = Decimal("100.00")
+DEFAULT_FEE = Decimal("0.01")
 
 
 class MiniWalletMode(Enum):
@@ -365,7 +365,7 @@ class MiniWallet:
     def create_self_transfer(
         self,
         *,
-        fee_rate=Decimal("3000.00"),
+        fee_rate=Decimal("0.01"),
         fee=Decimal("0"),
         utxo_to_spend=None,
         locktime=0,

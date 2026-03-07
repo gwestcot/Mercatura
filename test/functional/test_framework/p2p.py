@@ -145,7 +145,7 @@ MESSAGEMAP = {
 NET_MAGIC_BYTES = {
     "mainnet": b"\xe3\xe1\xf3\xe8",
     "testnet3": b"\xf4\xe5\xf3\xf4",
-    "regtest": b"\xda\xb5\xbf\xfa",
+    "regtest": b"\x4d\x43\x41\x03",
 }
 
 DISK_MAGIC_BYTES = {

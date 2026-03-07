@@ -105,7 +105,7 @@ def create_coinbase(
     pubkey: Optional[bytes] = None,
     *,
     script_pubkey: Optional[bytes] = None,
-    nValue: int = 50_000_000,
+    nValue: int = 50,
 ) -> CTransaction:
     """Create a coinbase transaction, assuming no miner fees.
 
@@ -119,7 +119,7 @@ def create_coinbase(
     )
     coinbaseoutput = CTxOut()
     coinbaseoutput.nValue = nValue * XEC
-    if nValue == 50_000_000:
+    if nValue == 50:
         halvings = int(height / 150)  # regtest
         coinbaseoutput.nValue >>= halvings
     if pubkey is not None:

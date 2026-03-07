@@ -5,21 +5,24 @@
 
 import unittest
 
+from .cashaddr import PUBKEY_TYPE, SCRIPT_TYPE, encode_full
 from .hash import hash160
 from .messages import hash256
 from .script import OP_TRUE, CScript, CScriptOp
 from .util import assert_equal
 
-ADDRESS_ECREG_UNSPENDABLE = "ecregtest:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcrl5mqkt"
-ADDRESS_ECREG_UNSPENDABLE_DESCRIPTOR = (
-    "addr(ecregtest:qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcrl5mqkt)#u6xx93xc"
-)
 SCRIPT_UNSPENDABLE_HEX = "76a914000000000000000000000000000000000000000088ac"
 SCRIPT_UNSPENDABLE = CScript.fromhex(SCRIPT_UNSPENDABLE_HEX)
+ADDRESS_ECREG_UNSPENDABLE = encode_full(
+    "mcaregtest", PUBKEY_TYPE, bytes.fromhex("00" * 20)
+)
+ADDRESS_ECREG_UNSPENDABLE_DESCRIPTOR = f"addr({ADDRESS_ECREG_UNSPENDABLE})"
 
 # Coins sent to this address can be spent with a scriptSig of just OP_TRUE
-ADDRESS_ECREG_P2SH_OP_TRUE = "ecregtest:prdpw30fk4ym6zl6rftfjuw806arpn26fvkgfu97xt"
 P2SH_OP_TRUE = CScript.fromhex("a914da1745e9b549bd0bfa1a569971c77eba30cd5a4b87")
+ADDRESS_ECREG_P2SH_OP_TRUE = encode_full(
+    "mcaregtest", SCRIPT_TYPE, bytes.fromhex("da1745e9b549bd0bfa1a569971c77eba30cd5a4b")
+)
 SCRIPTSIG_OP_TRUE = CScriptOp.encode_op_pushdata(CScript([OP_TRUE]))
 
 b58chars = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
