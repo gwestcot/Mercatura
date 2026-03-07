@@ -1509,11 +1509,17 @@ bool Processor::GetLocalAcceptance::operator()(
 }
 
 bool Processor::isPreconsensusActivated(const CBlockIndex *pprev) const {
-    return m_preConsensus;
+    static constexpr int AVALANCHE_ACTIVATION_HEIGHT = 8640;
+    const int nextHeight = pprev ? pprev->nHeight + 1 : 0;
+
+    return m_preConsensus && nextHeight >= AVALANCHE_ACTIVATION_HEIGHT;
 }
 
 bool Processor::isStakingPreconsensusActivated(const CBlockIndex *pprev) const {
-    return m_stakingPreConsensus;
+    static constexpr int AVALANCHE_ACTIVATION_HEIGHT = 8640;
+    const int nextHeight = pprev ? pprev->nHeight + 1 : 0;
+
+    return m_stakingPreConsensus && nextHeight >= AVALANCHE_ACTIVATION_HEIGHT;
 }
 
 } // namespace avalanche
