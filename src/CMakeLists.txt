@@ -545,6 +545,7 @@ add_library(common
 	netbase.cpp
 	outputtype.cpp
 	policy/policy.cpp
+        pow/scratchpad_pow.cpp
 	primitives/block.cpp
 	protocol.cpp
 	psbt.cpp
