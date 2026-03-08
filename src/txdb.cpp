@@ -14,6 +14,7 @@
 #include <util/signalinterrupt.h>
 #include <util/translation.h>
 #include <util/vector.h>
+#include <primitives/block.h>
 
 #include <cstdint>
 #include <memory>
@@ -351,8 +352,16 @@ bool CBlockTreeDB::LoadBlockIndexGuts(
         pindexNew->nStatus = diskindex.nStatus;
         pindexNew->nTx = diskindex.nTx;
 
-        if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits,
-                              params)) {
+        CBlockHeader header;
+        header.nVersion = pindexNew->nVersion;
+        header.hashPrevBlock = pindexNew->pprev ? pindexNew->pprev->GetBlockHash()
+                                                : BlockHash();
+        header.hashMerkleRoot = pindexNew->hashMerkleRoot;
+        header.nTime = pindexNew->nTime;
+        header.nBits = pindexNew->nBits;
+        header.nNonce = pindexNew->nNonce;
+
+        if (!CheckProofOfWork(header.GetPoWHash(), pindexNew->nBits, params)) {
             LogError("%s: CheckProofOfWork failed: %s\n", __func__,
                      pindexNew->ToString());
             return false;
