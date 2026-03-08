@@ -2241,6 +2241,13 @@ bool Chainstate::ConnectBlock(const CBlock &block, BlockValidationState &state,
     const CChainParams &params{m_chainman.GetParams()};
     const Consensus::Params &consensusParams = params.GetConsensus();
 
+    if (pindex->pprev == nullptr) {
+        pindex->nWorkEMA = McaPerBlockWork(*pindex);
+    } else {
+        pindex->nWorkEMA =
+            McaComputeWorkEMA(pindex->pprev, *pindex, consensusParams);
+    }
+
     // Check it again in case a previous version let a bad block in
     // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or
     // ContextualCheckBlockHeader() here. This means that if we add a new
