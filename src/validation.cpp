@@ -1549,6 +1549,29 @@ static arith_uint256 McaComputeWorkEMA(const CBlockIndex *pprev,
     return (pprev->nWorkEMA * (window - 1) + blockWork) / window;
 }
 
+static Amount McaApplyDecayScaffold(const Amount reward,
+                                    int nHeight,
+                                    const Consensus::Params &consensusParams) {
+    if (nHeight <= consensusParams.nMcaBootstrapBlocks) {
+        return reward;
+    }
+
+    const int blocksSinceBootstrap =
+        nHeight - consensusParams.nMcaBootstrapBlocks;
+    const int horizon = consensusParams.nMcaDecayHorizon;
+
+    if (horizon <= 0) {
+        return reward;
+    }
+
+    // Temporary integer decay scaffold:
+    // reduce reward by 1 base unit per full decay horizon elapsed.
+    const int decaySteps = blocksSinceBootstrap / horizon;
+    const Amount decayedReward = reward - decaySteps * SATOSHI;
+
+    return std::max(decayedReward, McaMinimumSubsidyFloor());
+}
+
 static Amount McaScaffoldDynamicSubsidy(
     int nHeight, const Consensus::Params &consensusParams) {
     const Amount previousSubsidy =
@@ -1556,7 +1579,8 @@ static Amount McaScaffoldDynamicSubsidy(
             ? McaBootstrapSubsidy(consensusParams)
             : McaMinimumSubsidyFloor();
 
-    const Amount candidateSubsidy = previousSubsidy;
+    const Amount candidateSubsidy =
+        McaApplyDecayScaffold(previousSubsidy, nHeight, consensusParams);
     const Amount clampedSubsidy =
         McaClampSubsidy(candidateSubsidy, previousSubsidy, consensusParams);
 
