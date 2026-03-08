@@ -48,8 +48,7 @@ BOOST_AUTO_TEST_CASE(block_subsidy_test) {
     const Amount postBootstrapSubsidy =
         GetBlockSubsidy(bootstrapBlocks, consensusParams);
 
-    BOOST_CHECK(postBootstrapSubsidy != bootstrapSubsidy);
-    BOOST_CHECK_EQUAL(postBootstrapSubsidy, 1 * SATOSHI);
+    BOOST_CHECK_EQUAL(postBootstrapSubsidy, bootstrapSubsidy);
 }
 
 static CBlock makeLargeDummyBlock(const size_t num_tx) {

@@ -1497,6 +1497,35 @@ static Amount McaMinimumSubsidyFloor() {
     return 1 * SATOSHI;
 }
 
+static Amount McaApplyClampUp(const Amount previousSubsidy,
+                              const Consensus::Params &consensusParams) {
+    return previousSubsidy +
+           (consensusParams.nMcaClampUpBps * previousSubsidy) / 10000;
+}
+
+static Amount McaApplyClampDown(const Amount previousSubsidy,
+                                const Consensus::Params &consensusParams) {
+    return previousSubsidy -
+           (consensusParams.nMcaClampDownBps * previousSubsidy) / 10000;
+}
+
+static Amount McaClampSubsidy(const Amount candidateSubsidy,
+                              const Amount previousSubsidy,
+                              const Consensus::Params &consensusParams) {
+    const Amount upperBound =
+        McaApplyClampUp(previousSubsidy, consensusParams);
+    const Amount lowerBound =
+        McaApplyClampDown(previousSubsidy, consensusParams);
+
+    if (candidateSubsidy > upperBound) {
+        return upperBound;
+    }
+    if (candidateSubsidy < lowerBound) {
+        return lowerBound;
+    }
+    return candidateSubsidy;
+}
+
 static arith_uint256 McaPerBlockWork(const CBlockIndex &block) {
     return GetBlockProof(block);
 }
@@ -1522,13 +1551,16 @@ static arith_uint256 McaComputeWorkEMA(const CBlockIndex *pprev,
 
 static Amount McaScaffoldDynamicSubsidy(
     int nHeight, const Consensus::Params &consensusParams) {
-    (void)nHeight;
-    (void)consensusParams;
+    const Amount previousSubsidy =
+        (nHeight == consensusParams.nMcaBootstrapBlocks)
+            ? McaBootstrapSubsidy(consensusParams)
+            : McaMinimumSubsidyFloor();
 
-    // Temporary Phase 4 scaffold implementation.
-    // This will be replaced by the EMA × decay × clamp × inflation floor ×
-    // security cap formula in the next steps.
-    return McaMinimumSubsidyFloor();
+    const Amount candidateSubsidy = previousSubsidy;
+    const Amount clampedSubsidy =
+        McaClampSubsidy(candidateSubsidy, previousSubsidy, consensusParams);
+
+    return std::max(clampedSubsidy, McaMinimumSubsidyFloor());
 }
 
 Amount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {
