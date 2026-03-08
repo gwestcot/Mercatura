@@ -157,8 +157,8 @@ int main() {
     MineGenesis("REGTEST", 1296688602, 0x207fffff);
 
     // Existing MCA testnet/mainnet params currently in chainparams.cpp
-    MineGenesis("TESTNET", 1296688602, 0x1e00ffff);
-    MineGenesis("MAINNET", 1231006505, 0x1e00ffff);
+    MineGenesis("TESTNET", 1296688602, 0x207fffff);
+    MineGenesis("MAINNET", 1231006505, 0x207fffff);
 
     return 0;
 }

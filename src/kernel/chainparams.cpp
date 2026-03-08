@@ -106,7 +106,7 @@ public:
         // 000000000000000004a1b34462cb8aeebd5799177f7a29cf28f2d1961716b5b5
         consensus.CSVHeight = 0;
         consensus.powLimit = uint256S(
-            "0000ffff00000000000000000000000000000000000000000000000000000000");  //temporary change for mining genesis
+            "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         // two weeks
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60;
         consensus.nPowTargetSpacing = 10 * 60;
@@ -181,10 +181,10 @@ public:
         m_assumed_chain_state_size =
             ChainParamsConstants::MAINNET_ASSUMED_CHAINSTATE_SIZE;
 
-        genesis = CreateGenesisBlock(1231006505, 6452080, 0x1e00ffff, 1,
+        genesis = CreateGenesisBlock(1231006505, 1, 0x207fffff, 1,
                                      50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("00000065a7b5763c6e32b0d1a069327e033a759899117d09513e1a97c8ddfd77"));
+        assert(consensus.hashGenesisBlock == uint256S("2f8a9e95e1fa50c8d49e6cdc3553484542941fc8f5ea4ccfd23e72a26f02c6ba"));
         assert(genesis.hashMerkleRoot == uint256S("0ab47e77458e949f2f881f9fbb6b9a49cedc25fcf42edecfc0c7fdf3e50d350e"));
 
         // Note that of those which support the service bits prefix, most only
@@ -282,7 +282,7 @@ public:
         // 00000000025e930139bac5c6c31a403776da130831ab85be56578f3fa75369bb
         consensus.CSVHeight = 0;
         consensus.powLimit = uint256S(
-            "0000ffff00000000000000000000000000000000000000000000000000000000");  //temp change for mining genesis
+            "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         // two weeks
         consensus.nPowTargetTimespan = 14 * 24 * 60 * 60;
         consensus.nPowTargetSpacing = 10 * 60;
@@ -353,9 +353,9 @@ public:
             ChainParamsConstants::TESTNET_ASSUMED_CHAINSTATE_SIZE;
 
         genesis =
-            CreateGenesisBlock(1296688602, 10239668, 0x1e00ffff, 1, 50 * COIN);
+            CreateGenesisBlock(1296688602, 11, 0x207fffff, 1, 50 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-	assert(consensus.hashGenesisBlock == uint256S("00000070d733510cd575cabb9c1245f267c55ba0a8750fe19064398b3ab45f5a"));
+	assert(consensus.hashGenesisBlock == uint256S("d32d0a72a2425781edaafedc9a39568953ed65384897296eeced30dc8e410bca"));
         assert(genesis.hashMerkleRoot == uint256S("0ab47e77458e949f2f881f9fbb6b9a49cedc25fcf42edecfc0c7fdf3e50d350e"));
 
         vFixedSeeds.clear();

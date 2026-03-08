@@ -32,52 +32,24 @@
 
 BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
 
-static void TestBlockSubsidyHalvings(const Consensus::Params &consensusParams) {
-    int maxHalvings = 64;
-    Amount nInitialSubsidy = 50 * COIN;
-
-    // for height == 0
-    Amount nPreviousSubsidy = 2 * nInitialSubsidy;
-    BOOST_CHECK_EQUAL(nPreviousSubsidy, 2 * nInitialSubsidy);
-    for (int nHalvings = 0; nHalvings < maxHalvings; nHalvings++) {
-        int nHeight = nHalvings * consensusParams.nSubsidyHalvingInterval;
-        Amount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
-        BOOST_CHECK(nSubsidy <= nInitialSubsidy);
-        BOOST_CHECK_EQUAL(nSubsidy, nPreviousSubsidy / 2);
-        nPreviousSubsidy = nSubsidy;
-    }
-    BOOST_CHECK_EQUAL(
-        GetBlockSubsidy(maxHalvings * consensusParams.nSubsidyHalvingInterval,
-                        consensusParams),
-        Amount::zero());
-}
-
-static void TestBlockSubsidyHalvings(int nSubsidyHalvingInterval) {
-    Consensus::Params consensusParams;
-    consensusParams.nSubsidyHalvingInterval = nSubsidyHalvingInterval;
-    TestBlockSubsidyHalvings(consensusParams);
-}
-
 BOOST_AUTO_TEST_CASE(block_subsidy_test) {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
-    // As in main
-    TestBlockSubsidyHalvings(chainParams->GetConsensus());
-    // As in regtest
-    TestBlockSubsidyHalvings(150);
-    // Just another interval
-    TestBlockSubsidyHalvings(1000);
-}
+    const Consensus::Params &consensusParams = chainParams->GetConsensus();
 
-BOOST_AUTO_TEST_CASE(subsidy_limit_test) {
-    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
-    Amount nSum = Amount::zero();
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-        Amount nSubsidy = GetBlockSubsidy(nHeight, chainParams->GetConsensus());
-        BOOST_CHECK(nSubsidy <= 50 * COIN);
-        nSum += 1000 * nSubsidy;
-        BOOST_CHECK(MoneyRange(nSum));
-    }
-    BOOST_CHECK_EQUAL(nSum, int64_t(2099999997690000LL) * SATOSHI);
+    const Amount bootstrapSubsidy =
+        consensusParams.nMcaBootstrapSubsidy * SATOSHI;
+    const int bootstrapBlocks = consensusParams.nMcaBootstrapBlocks;
+
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(0, consensusParams), bootstrapSubsidy);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1, consensusParams), bootstrapSubsidy);
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(bootstrapBlocks - 1, consensusParams),
+                      bootstrapSubsidy);
+
+    const Amount postBootstrapSubsidy =
+        GetBlockSubsidy(bootstrapBlocks, consensusParams);
+
+    BOOST_CHECK(postBootstrapSubsidy != bootstrapSubsidy);
+    BOOST_CHECK_EQUAL(postBootstrapSubsidy, 1 * SATOSHI);
 }
 
 static CBlock makeLargeDummyBlock(const size_t num_tx) {
