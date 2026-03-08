@@ -1484,17 +1484,59 @@ PackageMempoolAcceptResult ProcessNewPackage(Chainstate &active_chainstate,
     return result;
 }
 
-Amount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {
-    int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
-    // Force block reward to zero when right shift is undefined.
-    if (halvings >= 64) {
-        return Amount::zero();
+static Amount McaBootstrapSubsidy(const Consensus::Params &consensusParams) {
+    return consensusParams.nMcaBootstrapSubsidy * SATOSHI;
+}
+
+static bool IsMcaBootstrapHeight(int nHeight,
+                                 const Consensus::Params &consensusParams) {
+    return nHeight >= 0 && nHeight < consensusParams.nMcaBootstrapBlocks;
+}
+
+static Amount McaMinimumSubsidyFloor() {
+    return 1 * SATOSHI;
+}
+
+static arith_uint256 McaPerBlockWork(const CBlockIndex &block) {
+    return GetBlockProof(block);
+}
+
+static arith_uint256 McaComputeWorkEMA(const CBlockIndex *pprev,
+                                       const CBlockIndex &block,
+                                       const Consensus::Params &consensusParams) {
+    const arith_uint256 blockWork = McaPerBlockWork(block);
+
+    if (pprev == nullptr) {
+        return blockWork;
     }
 
-    Amount nSubsidy = 50 * COIN;
-    // Subsidy is cut in half every 210,000 blocks which will occur
-    // approximately every 4 years.
-    return ((nSubsidy / SATOSHI) >> halvings) * SATOSHI;
+    const int window = consensusParams.nMcaEmaWindow;
+    if (window <= 1) {
+        return blockWork;
+    }
+
+    // Integer EMA:
+    // EMA_new = floor((EMA_prev * (window - 1) + blockWork) / window)
+    return (pprev->nWorkEMA * (window - 1) + blockWork) / window;
+}
+
+static Amount McaScaffoldDynamicSubsidy(
+    int nHeight, const Consensus::Params &consensusParams) {
+    (void)nHeight;
+    (void)consensusParams;
+
+    // Temporary Phase 4 scaffold implementation.
+    // This will be replaced by the EMA × decay × clamp × inflation floor ×
+    // security cap formula in the next steps.
+    return McaMinimumSubsidyFloor();
+}
+
+Amount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {
+    if (IsMcaBootstrapHeight(nHeight, consensusParams)) {
+        return McaBootstrapSubsidy(consensusParams);
+    }
+
+    return McaScaffoldDynamicSubsidy(nHeight, consensusParams);
 }
 
 CoinsViews::CoinsViews(DBParams db_params, CoinsViewOptions options)

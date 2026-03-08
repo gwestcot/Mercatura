@@ -7,6 +7,7 @@
 
 #include <arith_uint256.h>
 #include <blockstatus.h>
+#include <consensus/amount.h>
 #include <flatfile.h>
 #include <kernel/cs_main.h>
 #include <primitives/block.h>
@@ -86,6 +87,15 @@ public:
 
     //! (memory only) Maximum nTime in the chain up to and including this block.
     unsigned int nTimeMax{0};
+
+    //! (memory only) MCA dynamic subsidy state: EMA of block work.
+    arith_uint256 nWorkEMA{};
+
+    //! (memory only) Cached MCA block subsidy for this height.
+    Amount nSubsidyCache{Amount::zero()};
+
+    //! (memory only) True if nSubsidyCache has been initialized.
+    bool fSubsidyCacheValid{false};
 
     explicit CBlockIndex() = default;
 

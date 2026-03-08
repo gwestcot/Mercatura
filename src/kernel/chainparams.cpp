@@ -84,6 +84,15 @@ public:
     explicit CMainParams(const ChainOptions &opts) {
         m_chain_type = ChainType::MAIN;
         consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nMcaBootstrapSubsidy = 5000;
+        consensus.nMcaBootstrapBlocks = 4320;
+        consensus.nMcaEmaWindow = 4320;
+        consensus.nMcaDecayHorizon = 105120;
+        consensus.nMcaClampUpBps = 50;
+        consensus.nMcaClampDownBps = 100;
+        consensus.nMcaAnnualInflationFloorBps = 150;
+        consensus.nMcaSecurityCapNumerator = 3;
+        consensus.nMcaSecurityCapDenominator = 2;
         // 00000000000000ce80a7e057163a4db1d5ad7b20fb6f598c9597b9665c8fb0d4 -
         // April 1, 2012
         consensus.BIP16Height = 0;
@@ -252,6 +261,15 @@ public:
     explicit CTestNetParams(const ChainOptions &opts) {
         m_chain_type = ChainType::TESTNET;
         consensus.nSubsidyHalvingInterval = 210000;
+        consensus.nMcaBootstrapSubsidy = 5000;
+        consensus.nMcaBootstrapBlocks = 4320;
+        consensus.nMcaEmaWindow = 4320;
+        consensus.nMcaDecayHorizon = 105120;
+        consensus.nMcaClampUpBps = 50;
+        consensus.nMcaClampDownBps = 100;
+        consensus.nMcaAnnualInflationFloorBps = 150;
+        consensus.nMcaSecurityCapNumerator = 3;
+        consensus.nMcaSecurityCapDenominator = 2;
         // 00000000040b4e986385315e14bee30ad876d8b47f748025b26683116d21aa65
         consensus.BIP16Height = 0;
         consensus.BIP34Height = 0;
@@ -403,6 +421,15 @@ public:
     explicit CRegTestParams(const ChainOptions &opts) {
         m_chain_type = ChainType::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
+        consensus.nMcaBootstrapSubsidy = 5000;
+        consensus.nMcaBootstrapBlocks = 4320;
+        consensus.nMcaEmaWindow = 4320;
+        consensus.nMcaDecayHorizon = 105120;
+        consensus.nMcaClampUpBps = 50;
+        consensus.nMcaClampDownBps = 100;
+        consensus.nMcaAnnualInflationFloorBps = 150;
+        consensus.nMcaSecurityCapNumerator = 3;
+        consensus.nMcaSecurityCapDenominator = 2;
         // always enforce P2SH BIP16 on regtest
         consensus.BIP16Height = 0;
         // BIP34 activated on regtest (Used in functional tests)

@@ -34,6 +34,34 @@ constexpr bool ValidDeployment(BuriedDeployment dep) {
 struct Params {
     BlockHash hashGenesisBlock;
     int nSubsidyHalvingInterval;
+
+    /** MCA bootstrap subsidy in base units */
+    int64_t nMcaBootstrapSubsidy;
+
+    /** MCA bootstrap subsidy duration in blocks */
+    int nMcaBootstrapBlocks;
+
+    /** MCA EMA smoothing window in blocks */
+    int nMcaEmaWindow;
+
+    /** MCA subsidy decay horizon in blocks */
+    int nMcaDecayHorizon;
+
+    /** MCA upward clamp in basis points per block */
+    int nMcaClampUpBps;
+
+    /** MCA downward clamp in basis points per block */
+    int nMcaClampDownBps;
+
+    /** MCA annual inflation floor in basis points */
+    int nMcaAnnualInflationFloorBps;
+
+    /** MCA security cap factor numerator */
+    int nMcaSecurityCapNumerator;
+
+    /** MCA security cap factor denominator */
+    int nMcaSecurityCapDenominator;
+
     /** Block height at which BIP16 becomes active */
     int BIP16Height;
     /** Block height and hash at which BIP34 becomes active */

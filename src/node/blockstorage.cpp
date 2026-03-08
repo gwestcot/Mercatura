@@ -83,6 +83,20 @@ CBlockIndex *BlockManager::AddToBlockIndex(const CBlockHeader &block,
     pindexNew->nChainWork =
         (pindexNew->pprev ? pindexNew->pprev->nChainWork : 0) +
         GetBlockProof(*pindexNew);
+
+    const arith_uint256 blockWork = GetBlockProof(*pindexNew);
+    if (pindexNew->pprev == nullptr) {
+        pindexNew->nWorkEMA = blockWork;
+    } else {
+        const int window = GetConsensus().nMcaEmaWindow;
+        if (window <= 1) {
+            pindexNew->nWorkEMA = blockWork;
+        } else {
+            pindexNew->nWorkEMA =
+                (pindexNew->pprev->nWorkEMA * (window - 1) + blockWork) /
+                window;
+        }
+    }
     pindexNew->RaiseValidity(BlockValidity::TREE);
     if (best_header == nullptr ||
         best_header->nChainWork < pindexNew->nChainWork) {
@@ -308,6 +322,20 @@ bool BlockManager::LoadBlockIndex(
 
         pindex->nChainWork = (pindex->pprev ? pindex->pprev->nChainWork : 0) +
                              GetBlockProof(*pindex);
+        const arith_uint256 blockWork = GetBlockProof(*pindex);
+        if (pindex->pprev == nullptr) {
+            pindex->nWorkEMA = blockWork;
+        } else {
+            const int window = GetConsensus().nMcaEmaWindow;
+            if (window <= 1) {
+                pindex->nWorkEMA = blockWork;
+            } else {
+                pindex->nWorkEMA =
+                    (pindex->pprev->nWorkEMA * (window - 1) + blockWork) /
+                    window;
+            }
+        }
+
         pindex->nTimeMax =
             (pindex->pprev ? std::max(pindex->pprev->nTimeMax, pindex->nTime)
                            : pindex->nTime);
