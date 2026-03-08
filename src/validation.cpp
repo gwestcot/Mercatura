@@ -1572,6 +1572,22 @@ static Amount McaApplyDecayScaffold(const Amount reward,
     return std::max(decayedReward, McaMinimumSubsidyFloor());
 }
 
+static Amount McaRawRewardFromEMA(const CBlockIndex *pindex,
+                                  const Consensus::Params &consensusParams) {
+    if (pindex == nullptr) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    // Temporary EMA-based scaffold:
+    // map the low 64 bits of EMA(work) into a small positive reward range.
+    // This is NOT the final sqrt(work) formula yet.
+    const uint64_t emaLow64 = pindex->nWorkEMA.GetLow64();
+    const int64_t scaledUnits =
+        1 + int64_t(emaLow64 % consensusParams.nMcaBootstrapSubsidy);
+
+    return scaledUnits * SATOSHI;
+}
+
 static Amount McaScaffoldDynamicSubsidy(
     int nHeight, const Consensus::Params &consensusParams) {
     const Amount previousSubsidy =
@@ -1585,6 +1601,30 @@ static Amount McaScaffoldDynamicSubsidy(
         McaClampSubsidy(candidateSubsidy, previousSubsidy, consensusParams);
 
     return std::max(clampedSubsidy, McaMinimumSubsidyFloor());
+}
+
+Amount GetBlockSubsidy(const CBlockIndex *pindex,
+                       const Consensus::Params &consensusParams) {
+    if (pindex == nullptr) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    if (IsMcaBootstrapHeight(pindex->nHeight, consensusParams)) {
+        return McaBootstrapSubsidy(consensusParams);
+    }
+
+    const Amount previousSubsidy =
+        (pindex->pprev == nullptr)
+            ? McaBootstrapSubsidy(consensusParams)
+            : GetBlockSubsidy(pindex->pprev, consensusParams);
+
+    const Amount rawReward = McaRawRewardFromEMA(pindex, consensusParams);
+    const Amount decayedReward =
+        McaApplyDecayScaffold(rawReward, pindex->nHeight, consensusParams);
+    const Amount clampedReward =
+        McaClampSubsidy(decayedReward, previousSubsidy, consensusParams);
+
+    return std::max(clampedReward, McaMinimumSubsidyFloor());
 }
 
 Amount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {
@@ -2610,7 +2650,7 @@ bool Chainstate::ConnectBlock(const CBlock &block, BlockValidationState &state,
              Ticks<MillisecondsDouble>(time_connect) / num_blocks_total);
 
     const Amount blockReward =
-        nFees + GetBlockSubsidy(pindex->nHeight, consensusParams);
+        nFees + GetBlockSubsidy(pindex, consensusParams);
     if (block.vtx[0]->GetValueOut() > blockReward && state.IsValid()) {
         state.Invalid(
             BlockValidationResult::BLOCK_CONSENSUS, "bad-cb-amount",
@@ -3160,8 +3200,7 @@ bool Chainstate::ConnectTip(BlockValidationState &state,
             m_filterParkingPoliciesApplied.insert(blockhash);
 
             const Amount blockReward =
-                blockFees +
-                GetBlockSubsidy(pindexNew->nHeight, consensusParams);
+                blockFees + GetBlockSubsidy(pindexNew, consensusParams);
 
             std::vector<std::unique_ptr<ParkingPolicy>> parkingPolicies;
             parkingPolicies.emplace_back(std::make_unique<MinerFundPolicy>(
