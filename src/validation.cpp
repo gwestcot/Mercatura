@@ -1627,6 +1627,40 @@ Amount GetBlockSubsidy(const CBlockIndex *pindex,
     return std::max(clampedReward, McaMinimumSubsidyFloor());
 }
 
+Amount GetProjectedBlockSubsidy(const CBlockIndex *pprev,
+                                int nextHeight,
+                                const Consensus::Params &consensusParams) {
+    if (pprev == nullptr) {
+        return McaBootstrapSubsidy(consensusParams);
+    }
+
+    if (IsMcaBootstrapHeight(nextHeight, consensusParams)) {
+        return McaBootstrapSubsidy(consensusParams);
+    }
+
+    /* Project next EMA value using the previous block */
+    const arith_uint256 projectedEMA =
+        McaComputeWorkEMA(pprev, *pprev, consensusParams);
+
+    const uint64_t emaLow64 = projectedEMA.GetLow64();
+
+    const int64_t scaledUnits =
+        1 + int64_t(emaLow64 % consensusParams.nMcaBootstrapSubsidy);
+
+    const Amount rawReward = scaledUnits * SATOSHI;
+
+    const Amount previousReward =
+        GetBlockSubsidy(pprev, consensusParams);
+
+    const Amount decayedReward =
+        McaApplyDecayScaffold(rawReward, nextHeight, consensusParams);
+
+    const Amount clampedReward =
+        McaClampSubsidy(decayedReward, previousReward, consensusParams);
+
+    return std::max(clampedReward, McaMinimumSubsidyFloor());
+}
+
 Amount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {
     if (IsMcaBootstrapHeight(nHeight, consensusParams)) {
         return McaBootstrapSubsidy(consensusParams);
