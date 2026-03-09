@@ -1591,6 +1591,20 @@ static uint64_t McaSqrtEMAWorkLow64(const arith_uint256 &value) {
     return r;
 }
 
+static Amount McaScaleSqrtReward(uint64_t sqrtEMA,
+                                 const Consensus::Params &consensusParams) {
+    // Temporary alpha-style scaling scaffold.
+    // This is NOT the final fixed-point alpha multiplier yet.
+    if (consensusParams.nMcaBootstrapSubsidy <= 0) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    const int64_t scaledUnits =
+        1 + int64_t(sqrtEMA % consensusParams.nMcaBootstrapSubsidy);
+
+    return scaledUnits * SATOSHI;
+}
+
 static Amount McaRawRewardFromEMA(const CBlockIndex *pindex,
                                   const Consensus::Params &consensusParams) {
     if (pindex == nullptr) {
@@ -1600,11 +1614,7 @@ static Amount McaRawRewardFromEMA(const CBlockIndex *pindex,
     // Temporary sqrt(work)-based scaffold using the low 64 bits of EMA(work).
     // This is NOT the final alpha * sqrt(work) fixed-point formula yet.
     const uint64_t sqrtEMA = McaSqrtEMAWorkLow64(pindex->nWorkEMA);
-
-    const int64_t scaledUnits =
-        1 + int64_t(sqrtEMA % consensusParams.nMcaBootstrapSubsidy);
-
-    return scaledUnits * SATOSHI;
+    return McaScaleSqrtReward(sqrtEMA, consensusParams);
 }
 
 static Amount McaScaffoldDynamicSubsidy(
