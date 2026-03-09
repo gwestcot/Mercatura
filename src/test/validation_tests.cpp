@@ -51,6 +51,38 @@ BOOST_AUTO_TEST_CASE(block_subsidy_test) {
     BOOST_CHECK_EQUAL(postBootstrapSubsidy, bootstrapSubsidy);
 }
 
+BOOST_AUTO_TEST_CASE(projected_subsidy_matches_indexed_subsidy_test) {
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const Consensus::Params &consensusParams = chainParams->GetConsensus();
+
+    // Build a fake previous block index just after bootstrap.
+    CBlockIndex prev;
+    BlockHash prevHash = BlockHash(uint256(1));
+    prev.phashBlock = &prevHash;
+    prev.nHeight = consensusParams.nMcaBootstrapBlocks;
+    prev.nBits = 0x207fffff;
+    prev.nWorkEMA = arith_uint256{1000};
+
+    // Build a fake candidate block index pointing to prev.
+    CBlockIndex candidate;
+    BlockHash candidateHash = BlockHash(uint256(2));
+    candidate.phashBlock = &candidateHash;
+    candidate.pprev = &prev;
+    candidate.nHeight = prev.nHeight + 1;
+    candidate.nBits = 0x207fffff;
+    candidate.nWorkEMA =
+        (prev.nWorkEMA * (consensusParams.nMcaEmaWindow - 1) +
+         GetBlockProof(candidate)) /
+        consensusParams.nMcaEmaWindow;
+
+    const Amount projectedSubsidy =
+        GetProjectedBlockSubsidy(&prev, candidate.nHeight, consensusParams);
+    const Amount indexedSubsidy =
+        GetBlockSubsidy(&candidate, consensusParams);
+
+    BOOST_CHECK_EQUAL(projectedSubsidy, indexedSubsidy);
+}
+
 static CBlock makeLargeDummyBlock(const size_t num_tx) {
     CBlock block;
     block.vtx.reserve(num_tx);
