@@ -1572,18 +1572,37 @@ static Amount McaApplyDecayScaffold(const Amount reward,
     return std::max(decayedReward, McaMinimumSubsidyFloor());
 }
 
+static uint64_t McaSqrtEMAWorkLow64(const arith_uint256 &value) {
+    // Temporary sqrt(work) scaffold using the low 64 bits of EMA(work).
+    // This is NOT the final full-width fixed-point sqrt implementation.
+    const uint64_t x = value.GetLow64();
+    if (x == 0) {
+        return 0;
+    }
+
+    uint64_t r = x;
+    uint64_t prev = 0;
+
+    while (r != prev) {
+        prev = r;
+        r = (r + x / r) / 2;
+    }
+
+    return r;
+}
+
 static Amount McaRawRewardFromEMA(const CBlockIndex *pindex,
                                   const Consensus::Params &consensusParams) {
     if (pindex == nullptr) {
         return McaMinimumSubsidyFloor();
     }
 
-    // Temporary EMA-based scaffold:
-    // map the low 64 bits of EMA(work) into a small positive reward range.
-    // This is NOT the final sqrt(work) formula yet.
-    const uint64_t emaLow64 = pindex->nWorkEMA.GetLow64();
+    // Temporary sqrt(work)-based scaffold using the low 64 bits of EMA(work).
+    // This is NOT the final alpha * sqrt(work) fixed-point formula yet.
+    const uint64_t sqrtEMA = McaSqrtEMAWorkLow64(pindex->nWorkEMA);
+
     const int64_t scaledUnits =
-        1 + int64_t(emaLow64 % consensusParams.nMcaBootstrapSubsidy);
+        1 + int64_t(sqrtEMA % consensusParams.nMcaBootstrapSubsidy);
 
     return scaledUnits * SATOSHI;
 }
