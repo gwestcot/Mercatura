@@ -125,6 +125,55 @@ BOOST_AUTO_TEST_CASE(projected_subsidy_matches_indexed_subsidy_over_range_test) 
     }
 }
 
+BOOST_AUTO_TEST_CASE(indexed_subsidy_respects_asymmetric_clamp_test) {
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const Consensus::Params &consensusParams = chainParams->GetConsensus();
+
+    // Build a previous block just after bootstrap.
+    CBlockIndex prev;
+    BlockHash prevHash = BlockHash(uint256(100));
+    prev.phashBlock = &prevHash;
+    prev.nHeight = consensusParams.nMcaBootstrapBlocks;
+    prev.nBits = 0x207fffff;
+    prev.nWorkEMA = arith_uint256{1000};
+
+    const Amount previousSubsidy = GetBlockSubsidy(&prev, consensusParams);
+
+    const Amount expectedUpClamp =
+        previousSubsidy +
+        (consensusParams.nMcaClampUpBps * previousSubsidy) / 10000;
+    const Amount expectedDownClamp =
+        previousSubsidy -
+        (consensusParams.nMcaClampDownBps * previousSubsidy) / 10000;
+
+    // Candidate with very large EMA to force a large upward raw reward move.
+    CBlockIndex highCandidate;
+    BlockHash highHash = BlockHash(uint256(101));
+    highCandidate.phashBlock = &highHash;
+    highCandidate.pprev = &prev;
+    highCandidate.nHeight = prev.nHeight + 1;
+    highCandidate.nBits = 0x207fffff;
+    highCandidate.nWorkEMA = arith_uint256{1};
+    highCandidate.nWorkEMA <<= 200;
+
+    const Amount highIndexedSubsidy =
+        GetBlockSubsidy(&highCandidate, consensusParams);
+    BOOST_CHECK_EQUAL(highIndexedSubsidy, expectedUpClamp);
+
+    // Candidate with tiny EMA to force a large downward raw reward move.
+    CBlockIndex lowCandidate;
+    BlockHash lowHash = BlockHash(uint256(102));
+    lowCandidate.phashBlock = &lowHash;
+    lowCandidate.pprev = &prev;
+    lowCandidate.nHeight = prev.nHeight + 1;
+    lowCandidate.nBits = 0x207fffff;
+    lowCandidate.nWorkEMA = arith_uint256{1};
+
+    const Amount lowIndexedSubsidy =
+        GetBlockSubsidy(&lowCandidate, consensusParams);
+    BOOST_CHECK_EQUAL(lowIndexedSubsidy, expectedDownClamp);
+}
+
 static CBlock makeLargeDummyBlock(const size_t num_tx) {
     CBlock block;
     block.vtx.reserve(num_tx);
