@@ -64,6 +64,7 @@
 #include <util/translation.h>
 #include <validationinterface.h>
 #include <warnings.h>
+#include <pow/grasberg.h>
 
 #include <algorithm>
 #include <atomic>
@@ -1564,57 +1565,87 @@ static Amount McaApplyDecayScaffold(const Amount reward,
         return reward;
     }
 
-    // Temporary integer decay scaffold:
-    // reduce reward by 1 base unit per full decay horizon elapsed.
-    const int decaySteps = blocksSinceBootstrap / horizon;
-    const Amount decayedReward = reward - decaySteps * SATOSHI;
+    // Temporary deterministic fixed-point decay scaffold using a Q32 exponent:
+    // reward * 2^(-blocksSinceBootstrap / horizon)
+    const uint64_t xQ32 =
+        (uint64_t(blocksSinceBootstrap) << 32) / uint64_t(horizon);
+
+    const uint32_t expDeltaQ32 = grasberg::deterministicExp2(uint32_t(xQ32));
+    const uint64_t expPosQ32 = (uint64_t(1) << 32) + uint64_t(expDeltaQ32);
+
+    // decayQ32 ≈ 2^32 * 2^(-x)
+    const uint64_t decayQ32 = (uint64_t(1) << 63) / (expPosQ32 >> 1);
+
+    const uint64_t rewardUnits = uint64_t(reward / SATOSHI);
+    const arith_uint256 decayedUnits =
+        (arith_uint256(rewardUnits) * arith_uint256(decayQ32)) >> 32;
+
+    if (decayedUnits.bits() > 63) {
+        return MAX_MONEY;
+    }
+
+    const Amount decayedReward = int64_t(decayedUnits.GetLow64()) * SATOSHI;
 
     return std::max(decayedReward, McaMinimumSubsidyFloor());
 }
 
-static uint64_t McaSqrtEMAWorkLow64(const arith_uint256 &value) {
-    // Temporary sqrt(work) scaffold using the low 64 bits of EMA(work).
-    // This is NOT the final full-width fixed-point sqrt implementation.
-    const uint64_t x = value.GetLow64();
-    if (x == 0) {
-        return 0;
+static arith_uint256 McaSqrtEMAWork(const arith_uint256 &value) {
+    // Full-width integer sqrt for arith_uint256.
+    // Returns floor(sqrt(value)) using deterministic binary search.
+    if (value == 0) {
+        return arith_uint256{0};
     }
 
-    uint64_t r = x;
-    uint64_t prev = 0;
+    const unsigned int bitlen = value.bits();
+    const unsigned int highBit = (bitlen + 1) / 2;
 
-    while (r != prev) {
-        prev = r;
-        r = (r + x / r) / 2;
+    arith_uint256 low{0};
+    arith_uint256 high = arith_uint256{1} << highBit;
+    const arith_uint256 one{1};
+
+    while (low < high) {
+        const arith_uint256 mid = low + ((high - low + one) >> 1);
+
+        if (mid <= value / mid) {
+            low = mid;
+        } else {
+            high = mid - one;
+        }
     }
 
-    return r;
+    return low;
 }
 
-static Amount McaScaleSqrtReward(uint64_t sqrtEMA,
-                                 const Consensus::Params &consensusParams) {
+static Amount McaScaleSqrtReward(
+    const arith_uint256 &sqrtEMA,
+    const Consensus::Params &consensusParams) {
     // Temporary fixed-point alpha scaffold using a Q32-style numerator.
     // This is NOT the final calibrated alpha * sqrt(work) implementation yet.
     if (consensusParams.nMcaAlphaNumerator <= 0) {
         return McaMinimumSubsidyFloor();
     }
 
-    const uint64_t scaledUnits =
-        (uint64_t(consensusParams.nMcaAlphaNumerator) * sqrtEMA) >> 32;
+    const arith_uint256 scaledUnits =
+        (sqrtEMA * arith_uint256(uint64_t(consensusParams.nMcaAlphaNumerator))) >>
+        32;
 
     if (scaledUnits == 0) {
         return McaMinimumSubsidyFloor();
     }
 
-    return int64_t(scaledUnits) * SATOSHI;
+    if (scaledUnits.bits() > 63) {
+        return MAX_MONEY;
+    }
+
+    return int64_t(scaledUnits.GetLow64()) * SATOSHI;
 }
 
 static Amount McaRawRewardFromEMAValue(
     const arith_uint256 &emaValue,
     const Consensus::Params &consensusParams) {
-    // Temporary sqrt(work)-based scaffold using the low 64 bits of EMA(work).
+    // Temporary sqrt(work)-based scaffold using full-width EMA(work).
     // This is NOT the final alpha * sqrt(work) fixed-point formula yet.
-    const uint64_t sqrtEMA = McaSqrtEMAWorkLow64(emaValue);
+    const arith_uint256 sqrtEMA = McaSqrtEMAWork(emaValue);
     return McaScaleSqrtReward(sqrtEMA, consensusParams);
 }
 
