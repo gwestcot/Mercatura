@@ -1540,6 +1540,33 @@ static Amount McaInflationFloorForBlock(
                                              consensusParams);
 }
 
+static Amount McaSecurityCapFromChainSubsidy(
+    const Amount chainSubsidy,
+    const Consensus::Params &consensusParams) {
+    const Amount inflationFloor =
+        McaInflationFloorFromChainSubsidy(chainSubsidy, consensusParams);
+
+    if (consensusParams.nMcaSecurityCapNumerator <= 0 ||
+        consensusParams.nMcaSecurityCapDenominator <= 0) {
+        return inflationFloor;
+    }
+
+    return (consensusParams.nMcaSecurityCapNumerator * inflationFloor) /
+           consensusParams.nMcaSecurityCapDenominator;
+}
+
+static Amount McaSecurityCapForBlock(
+    const CBlockIndex *pindex,
+    const Consensus::Params &consensusParams) {
+    if (pindex == nullptr || pindex->pprev == nullptr ||
+        !pindex->pprev->fChainSubsidyValid) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    return McaSecurityCapFromChainSubsidy(pindex->pprev->nChainSubsidy,
+                                          consensusParams);
+}
+
 static Amount McaApplyClampUp(const Amount previousSubsidy,
                               const Consensus::Params &consensusParams) {
     return previousSubsidy +
@@ -1736,8 +1763,12 @@ Amount GetBlockSubsidy(const CBlockIndex *pindex,
     const Amount clampedReward =
         McaClampSubsidy(decayedReward, previousSubsidy, consensusParams);
 
-    return std::max(clampedReward,
-                    McaInflationFloorForBlock(pindex, consensusParams));
+    const Amount inflationFloor =
+        McaInflationFloorForBlock(pindex, consensusParams);
+    const Amount securityCap =
+        McaSecurityCapForBlock(pindex, consensusParams);
+
+    return std::max(inflationFloor, std::min(clampedReward, securityCap));
 }
 
 Amount GetProjectedBlockSubsidy(const CBlockIndex *pprev,
@@ -1770,10 +1801,13 @@ Amount GetProjectedBlockSubsidy(const CBlockIndex *pprev,
     const Amount projectedChainSubsidy =
         pprev->fChainSubsidyValid ? pprev->nChainSubsidy : Amount::zero();
 
-    return std::max(
-        clampedReward,
+    const Amount inflationFloor =
         McaInflationFloorFromChainSubsidy(projectedChainSubsidy,
-                                          consensusParams));
+                                          consensusParams);
+    const Amount securityCap =
+        McaSecurityCapFromChainSubsidy(projectedChainSubsidy, consensusParams);
+
+    return std::max(inflationFloor, std::min(clampedReward, securityCap));
 }
 
 Amount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {
