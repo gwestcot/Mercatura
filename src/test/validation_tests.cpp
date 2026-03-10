@@ -174,6 +174,67 @@ BOOST_AUTO_TEST_CASE(indexed_subsidy_respects_asymmetric_clamp_test) {
     BOOST_CHECK_EQUAL(lowIndexedSubsidy, expectedDownClamp);
 }
 
+BOOST_AUTO_TEST_CASE(indexed_subsidy_respects_floor_and_security_cap_test) {
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const Consensus::Params &consensusParams = chainParams->GetConsensus();
+
+    static constexpr int NUM_BLOCKS_TO_TEST = 250;
+
+    std::vector<BlockHash> hashes(NUM_BLOCKS_TO_TEST + 1);
+    std::vector<CBlockIndex> chain(NUM_BLOCKS_TO_TEST + 1);
+
+    hashes[0] = BlockHash(uint256(200));
+    chain[0].phashBlock = &hashes[0];
+    chain[0].nHeight = consensusParams.nMcaBootstrapBlocks;
+    chain[0].nBits = 0x207fffff;
+    chain[0].nWorkEMA = arith_uint256{1000};
+
+    // Seed the first block's cached subsidy / chain subsidy so later blocks
+    // can exercise floor/cap logic from previous-chain subsidy state.
+    chain[0].nSubsidyCache = GetBlockSubsidy(&chain[0], consensusParams);
+    chain[0].fSubsidyCacheValid = true;
+    chain[0].nChainSubsidy = chain[0].nSubsidyCache;
+    chain[0].fChainSubsidyValid = true;
+
+    for (int i = 1; i <= NUM_BLOCKS_TO_TEST; ++i) {
+        hashes[i] = BlockHash(uint256(i + 200));
+
+        CBlockIndex &prev = chain[i - 1];
+        CBlockIndex &candidate = chain[i];
+
+        candidate.phashBlock = &hashes[i];
+        candidate.pprev = &prev;
+        candidate.nHeight = prev.nHeight + 1;
+        candidate.nBits = 0x207fffff;
+        candidate.nWorkEMA =
+            (prev.nWorkEMA * (consensusParams.nMcaEmaWindow - 1) +
+             GetBlockProof(candidate)) /
+            consensusParams.nMcaEmaWindow;
+
+        const Amount indexedSubsidy =
+            GetBlockSubsidy(&candidate, consensusParams);
+
+        const Amount inflationFloor = std::max(
+            Amount::satoshi(),
+            ((consensusParams.nMcaAnnualInflationFloorBps *
+              prev.nChainSubsidy) /
+             10000) /
+                (365 * 24 * 60 * 60 / consensusParams.nPowTargetSpacing));
+
+        const Amount securityCap =
+            (consensusParams.nMcaSecurityCapNumerator * inflationFloor) /
+            consensusParams.nMcaSecurityCapDenominator;
+
+        BOOST_CHECK(indexedSubsidy >= inflationFloor);
+        BOOST_CHECK(indexedSubsidy <= securityCap);
+
+        candidate.nSubsidyCache = indexedSubsidy;
+        candidate.fSubsidyCacheValid = true;
+        candidate.nChainSubsidy = prev.nChainSubsidy + indexedSubsidy;
+        candidate.fChainSubsidyValid = true;
+    }
+}
+
 static CBlock makeLargeDummyBlock(const size_t num_tx) {
     CBlock block;
     block.vtx.reserve(num_tx);
