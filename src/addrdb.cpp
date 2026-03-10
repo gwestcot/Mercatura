@@ -75,7 +75,7 @@ void BanMapFromJson(const UniValue &bans_json, banmap_t &bans) {
             ban_entry_json[BANMAN_JSON_VERSION_KEY].getInt<int>()};
         if (version != CBanEntry::CURRENT_VERSION) {
             LogPrintf(
-                "Dropping entry with unknown version (%s) from ban list\n",
+                "Dropping entry with unknown version (%d) from ban list\n",
                 version);
             continue;
         }
