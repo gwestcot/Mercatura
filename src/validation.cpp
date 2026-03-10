@@ -1498,6 +1498,48 @@ static Amount McaMinimumSubsidyFloor() {
     return 1 * SATOSHI;
 }
 
+static Amount McaInflationFloorFromChainSubsidy(
+    const Amount chainSubsidy,
+    const Consensus::Params &consensusParams) {
+    if (chainSubsidy <= Amount::zero()) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    if (consensusParams.nMcaAnnualInflationFloorBps <= 0) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    if (consensusParams.nPowTargetSpacing <= 0) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    static constexpr int64_t SECONDS_PER_YEAR = 365LL * 24 * 60 * 60;
+    const int64_t blocksPerYear =
+        SECONDS_PER_YEAR / consensusParams.nPowTargetSpacing;
+
+    if (blocksPerYear <= 0) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    const Amount annualFloor =
+        (consensusParams.nMcaAnnualInflationFloorBps * chainSubsidy) / 10000;
+    const Amount perBlockFloor = annualFloor / blocksPerYear;
+
+    return std::max(perBlockFloor, McaMinimumSubsidyFloor());
+}
+
+static Amount McaInflationFloorForBlock(
+    const CBlockIndex *pindex,
+    const Consensus::Params &consensusParams) {
+    if (pindex == nullptr || pindex->pprev == nullptr ||
+        !pindex->pprev->fChainSubsidyValid) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    return McaInflationFloorFromChainSubsidy(pindex->pprev->nChainSubsidy,
+                                             consensusParams);
+}
+
 static Amount McaApplyClampUp(const Amount previousSubsidy,
                               const Consensus::Params &consensusParams) {
     return previousSubsidy +
@@ -1694,7 +1736,8 @@ Amount GetBlockSubsidy(const CBlockIndex *pindex,
     const Amount clampedReward =
         McaClampSubsidy(decayedReward, previousSubsidy, consensusParams);
 
-    return std::max(clampedReward, McaMinimumSubsidyFloor());
+    return std::max(clampedReward,
+                    McaInflationFloorForBlock(pindex, consensusParams));
 }
 
 Amount GetProjectedBlockSubsidy(const CBlockIndex *pprev,
@@ -1724,7 +1767,13 @@ Amount GetProjectedBlockSubsidy(const CBlockIndex *pprev,
     const Amount clampedReward =
         McaClampSubsidy(decayedReward, previousReward, consensusParams);
 
-    return std::max(clampedReward, McaMinimumSubsidyFloor());
+    const Amount projectedChainSubsidy =
+        pprev->fChainSubsidyValid ? pprev->nChainSubsidy : Amount::zero();
+
+    return std::max(
+        clampedReward,
+        McaInflationFloorFromChainSubsidy(projectedChainSubsidy,
+                                          consensusParams));
 }
 
 Amount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {
@@ -2387,6 +2436,19 @@ bool Chainstate::ConnectBlock(const CBlock &block, BlockValidationState &state,
         pindex->nWorkEMA =
             McaComputeWorkEMA(pindex->pprev, *pindex, consensusParams);
     }
+
+    const Amount blockSubsidy = GetBlockSubsidy(pindex, consensusParams);
+    pindex->nSubsidyCache = blockSubsidy;
+    pindex->fSubsidyCacheValid = true;
+
+    if (pindex->pprev == nullptr) {
+        pindex->nChainSubsidy = blockSubsidy;
+    } else if (pindex->pprev->fChainSubsidyValid) {
+        pindex->nChainSubsidy = pindex->pprev->nChainSubsidy + blockSubsidy;
+    } else {
+        pindex->nChainSubsidy = blockSubsidy;
+    }
+    pindex->fChainSubsidyValid = true;
 
     // Check it again in case a previous version let a bad block in
     // NOTE: We don't currently (re-)invoke ContextualCheckBlock() or

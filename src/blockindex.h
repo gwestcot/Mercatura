@@ -97,6 +97,12 @@ public:
     //! (memory only) True if nSubsidyCache has been initialized.
     bool fSubsidyCacheValid{false};
 
+    //! (memory only) Cumulative MCA block subsidy through this height.
+    Amount nChainSubsidy{Amount::zero()};
+
+    //! (memory only) True if nChainSubsidy has been initialized.
+    bool fChainSubsidyValid{false};
+
     explicit CBlockIndex() = default;
 
     explicit CBlockIndex(const CBlockHeader &block)
