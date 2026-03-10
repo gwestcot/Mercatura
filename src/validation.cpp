@@ -1593,16 +1593,29 @@ static uint64_t McaSqrtEMAWorkLow64(const arith_uint256 &value) {
 
 static Amount McaScaleSqrtReward(uint64_t sqrtEMA,
                                  const Consensus::Params &consensusParams) {
-    // Temporary alpha-style scaling scaffold.
-    // This is NOT the final fixed-point alpha multiplier yet.
-    if (consensusParams.nMcaBootstrapSubsidy <= 0) {
+    // Temporary fixed-point alpha scaffold using a Q32-style numerator.
+    // This is NOT the final calibrated alpha * sqrt(work) implementation yet.
+    if (consensusParams.nMcaAlphaNumerator <= 0) {
         return McaMinimumSubsidyFloor();
     }
 
-    const int64_t scaledUnits =
-        1 + int64_t(sqrtEMA % consensusParams.nMcaBootstrapSubsidy);
+    const uint64_t scaledUnits =
+        (uint64_t(consensusParams.nMcaAlphaNumerator) * sqrtEMA) >> 32;
 
-    return scaledUnits * SATOSHI;
+    if (scaledUnits == 0) {
+        return McaMinimumSubsidyFloor();
+    }
+
+    return int64_t(scaledUnits) * SATOSHI;
+}
+
+static Amount McaRawRewardFromEMAValue(
+    const arith_uint256 &emaValue,
+    const Consensus::Params &consensusParams) {
+    // Temporary sqrt(work)-based scaffold using the low 64 bits of EMA(work).
+    // This is NOT the final alpha * sqrt(work) fixed-point formula yet.
+    const uint64_t sqrtEMA = McaSqrtEMAWorkLow64(emaValue);
+    return McaScaleSqrtReward(sqrtEMA, consensusParams);
 }
 
 static Amount McaRawRewardFromEMA(const CBlockIndex *pindex,
@@ -1611,10 +1624,7 @@ static Amount McaRawRewardFromEMA(const CBlockIndex *pindex,
         return McaMinimumSubsidyFloor();
     }
 
-    // Temporary sqrt(work)-based scaffold using the low 64 bits of EMA(work).
-    // This is NOT the final alpha * sqrt(work) fixed-point formula yet.
-    const uint64_t sqrtEMA = McaSqrtEMAWorkLow64(pindex->nWorkEMA);
-    return McaScaleSqrtReward(sqrtEMA, consensusParams);
+    return McaRawRewardFromEMAValue(pindex->nWorkEMA, consensusParams);
 }
 
 static Amount McaScaffoldDynamicSubsidy(
@@ -1671,12 +1681,8 @@ Amount GetProjectedBlockSubsidy(const CBlockIndex *pprev,
     const arith_uint256 projectedEMA =
         McaComputeWorkEMA(pprev, *pprev, consensusParams);
 
-    const uint64_t emaLow64 = projectedEMA.GetLow64();
-
-    const int64_t scaledUnits =
-        1 + int64_t(emaLow64 % consensusParams.nMcaBootstrapSubsidy);
-
-    const Amount rawReward = scaledUnits * SATOSHI;
+    const Amount rawReward =
+        McaRawRewardFromEMAValue(projectedEMA, consensusParams);
 
     const Amount previousReward =
         GetBlockSubsidy(pprev, consensusParams);

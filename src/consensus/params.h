@@ -44,6 +44,9 @@ struct Params {
     /** MCA EMA smoothing window in blocks */
     int nMcaEmaWindow;
 
+    /** MCA fixed-point alpha numerator (Q32 scaffold) */
+    int64_t nMcaAlphaNumerator;
+
     /** MCA subsidy decay horizon in blocks */
     int nMcaDecayHorizon;
 

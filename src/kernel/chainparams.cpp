@@ -87,6 +87,7 @@ public:
         consensus.nMcaBootstrapSubsidy = 5000;
         consensus.nMcaBootstrapBlocks = 4320;
         consensus.nMcaEmaWindow = 4320;
+        consensus.nMcaAlphaNumerator = 1 << 16;
         consensus.nMcaDecayHorizon = 105120;
         consensus.nMcaClampUpBps = 50;
         consensus.nMcaClampDownBps = 100;
@@ -264,6 +265,7 @@ public:
         consensus.nMcaBootstrapSubsidy = 5000;
         consensus.nMcaBootstrapBlocks = 4320;
         consensus.nMcaEmaWindow = 4320;
+        consensus.nMcaAlphaNumerator = 1 << 16;
         consensus.nMcaDecayHorizon = 105120;
         consensus.nMcaClampUpBps = 50;
         consensus.nMcaClampDownBps = 100;
@@ -424,6 +426,7 @@ public:
         consensus.nMcaBootstrapSubsidy = 5000;
         consensus.nMcaBootstrapBlocks = 4320;
         consensus.nMcaEmaWindow = 4320;
+        consensus.nMcaAlphaNumerator = 1 << 16;
         consensus.nMcaDecayHorizon = 105120;
         consensus.nMcaClampUpBps = 50;
         consensus.nMcaClampDownBps = 100;
