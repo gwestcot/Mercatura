@@ -605,9 +605,9 @@ BOOST_AUTO_TEST_CASE(test_IsStandard) {
     BOOST_CHECK(IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY, g_bare_multi,
                              g_dust, reason));
 
-    // Check dust with default relay fee:
-    Amount nDustThreshold = 3 * 182 * g_dust.GetFeePerK() / 1000;
-    BOOST_CHECK_EQUAL(nDustThreshold, 546 * SATOSHI);
+    // Check dust with default relay fee using the policy helper.
+    Amount nDustThreshold = GetDustThreshold(CTxOut(t.vout[0]), g_dust);
+    BOOST_CHECK_EQUAL(nDustThreshold, 3 * SATOSHI);
     // dust:
     t.vout[0].nValue = nDustThreshold - SATOSHI;
     reason.clear();
@@ -648,10 +648,11 @@ BOOST_AUTO_TEST_CASE(test_IsStandard) {
                              g_dust, reason));
 
     // Check dust with odd relay fee to verify rounding:
-    // nDustThreshold = 182 * 1234 / 1000 * 3
     g_dust = CFeeRate(1234 * SATOSHI);
+    nDustThreshold = GetDustThreshold(CTxOut(t.vout[0]), g_dust);
+    BOOST_CHECK_EQUAL(nDustThreshold, 672 * SATOSHI);
     // dust:
-    t.vout[0].nValue = (672 - 1) * SATOSHI;
+    t.vout[0].nValue = nDustThreshold - SATOSHI;
     reason.clear();
     BOOST_CHECK(!IsStandardTx(CTransaction{t}, MAX_OP_RETURN_RELAY,
                               g_bare_multi, g_dust, reason));
