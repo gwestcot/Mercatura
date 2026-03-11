@@ -4683,21 +4683,22 @@ static bool CheckBlockHeader(const CBlockHeader &block,
                              BlockValidationOptions validationOptions) {
     // Check proof of work matches claimed amount
 
-    if (validationOptions.shouldValidatePoW()) {
-        const bool is_regtest_like =
-            params.fPowAllowMinDifficultyBlocks && params.fPowNoRetargeting;
+if (validationOptions.shouldValidatePoW()) {
+    const bool is_regtest_like =
+        params.fPowAllowMinDifficultyBlocks && params.fPowNoRetargeting;
 
-        const bool use_fast_regtest_pow =
-            is_regtest_like && block.GetHash() != params.hashGenesisBlock;
-
-        const auto pow_hash =
-            use_fast_regtest_pow ? block.GetHash() : block.GetPoWHash();
-
-        if (!CheckProofOfWork(pow_hash, block.nBits, params)) {
-            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
-                                 "high-hash", "proof of work failed");
-        }
+    if (is_regtest_like && block.GetHash() == params.hashGenesisBlock) {
+        return true;
     }
+
+    const auto pow_hash =
+        is_regtest_like ? block.GetHash() : block.GetPoWHash();
+
+    if (!CheckProofOfWork(pow_hash, block.nBits, params)) {
+        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
+                             "high-hash", "proof of work failed");
+    }
+}
 
     return true;
 }
