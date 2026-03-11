@@ -159,9 +159,7 @@ BasicTestingSetup::BasicTestingSetup(
 
 BasicTestingSetup::~BasicTestingSetup() {
     LogInstance().DisconnectTestLogger();
-    // TEMP: keep the test datadir for debugging failures
-    std::cout << "Keeping test datadir: " << fs::PathToString(m_path_root) << std::endl;
-    // fs::remove_all(m_path_root);
+    fs::remove_all(m_path_root);
 
     gArgs.ClearArgs();
 }
@@ -336,7 +334,7 @@ TestChain100Setup::TestChain100Setup(
         LOCK(::cs_main);
         assert(
             m_node.chainman->ActiveTip()->GetBlockHash().ToString() ==
-            "5afde277a26b6f36aee8f61a1dbf755587e1c6be63e654a88abe2a1ff0fbfb05");
+            "35cca4cae7a5a442370889ef5ea990c7aaaa1563e4a8b4e3fd94963cd109afb2");
     }
 }
 
@@ -378,10 +376,10 @@ TestChain100Setup::CreateBlock(const std::vector<CMutableTransaction> &txns,
                                 config.GetMaxBlockSize());
 
     const Consensus::Params &params = config.GetChainParams().GetConsensus();
-    while (!CheckProofOfWork(block.GetPoWHash(), block.nBits, params)) {
+    block.nBits = 0x207fffff;
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, params)) {
         ++block.nNonce;
     }
-
     return block;
 }
 

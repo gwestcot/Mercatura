@@ -3378,7 +3378,6 @@ bool Chainstate::ConnectTip(BlockValidationState &state,
                      pindexNew->GetBlockHash().ToString(), state.ToString());
             return false;
         }
-
         /**
          * The block is valid by consensus rules so now we check if the block
          * passes all block policy checks. If not, then park the block and bail.
@@ -4684,11 +4683,20 @@ static bool CheckBlockHeader(const CBlockHeader &block,
                              BlockValidationOptions validationOptions) {
     // Check proof of work matches claimed amount
 
-    if (validationOptions.shouldValidatePoW() &&
-        !CheckProofOfWork(block.GetPoWHash(), block.nBits, params)) {
+    if (validationOptions.shouldValidatePoW()) {
+        const bool is_regtest_like =
+            params.fPowAllowMinDifficultyBlocks && params.fPowNoRetargeting;
 
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
-                             "high-hash", "proof of work failed");
+        const bool use_fast_regtest_pow =
+            is_regtest_like && block.GetHash() != params.hashGenesisBlock;
+
+        const auto pow_hash =
+            use_fast_regtest_pow ? block.GetHash() : block.GetPoWHash();
+
+        if (!CheckProofOfWork(pow_hash, block.nBits, params)) {
+            return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER,
+                                 "high-hash", "proof of work failed");
+        }
     }
 
     return true;
