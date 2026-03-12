@@ -1768,7 +1768,15 @@ Amount GetBlockSubsidy(const CBlockIndex *pindex,
     const Amount securityCap =
         McaSecurityCapForBlock(pindex, consensusParams);
 
-    return std::max(inflationFloor, std::min(clampedReward, securityCap));
+    LogPrintf("MCA subsidy debug: height=%d prev=%s raw=%s decayed=%s clamped=%s floor=%s\n",
+              pindex->nHeight,
+              previousSubsidy.ToString(),
+              rawReward.ToString(),
+              decayedReward.ToString(),
+              clampedReward.ToString(),
+              inflationFloor.ToString());
+
+    return std::max(inflationFloor, clampedReward);
 }
 
 Amount GetProjectedBlockSubsidy(const CBlockIndex *pprev,
@@ -1807,7 +1815,7 @@ Amount GetProjectedBlockSubsidy(const CBlockIndex *pprev,
     const Amount securityCap =
         McaSecurityCapFromChainSubsidy(projectedChainSubsidy, consensusParams);
 
-    return std::max(inflationFloor, std::min(clampedReward, securityCap));
+    return std::max(inflationFloor, clampedReward);
 }
 
 Amount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams) {

@@ -19,6 +19,7 @@
 #include <uint256.h>
 #include <util/chaintype.h>
 #include <validation.h>
+#include <iostream>
 
 #include <test/util/setup_common.h>
 
@@ -454,6 +455,94 @@ BOOST_AUTO_TEST_CASE(block_malleation) {
         BOOST_CHECK(BlockMerkleRoot(block) == merkle_root);
         BOOST_CHECK(is_mutated(block));
     }
+}
+
+BOOST_AUTO_TEST_CASE(indexed_subsidy_reacts_to_work_ema_changes_test) {
+    const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
+    const Consensus::Params &consensusParams = chainParams->GetConsensus();
+
+    std::vector<BlockHash> hashes(31);
+    std::vector<CBlockIndex> chain(31);
+    std::vector<Amount> rewards;
+
+    const Amount bootstrapSubsidy =
+        consensusParams.nMcaBootstrapSubsidy * SATOSHI;
+    const int bootstrapBlocks = consensusParams.nMcaBootstrapBlocks;
+
+    hashes[0] = BlockHash(uint256(1));
+    chain[0].phashBlock = &hashes[0];
+    chain[0].nHeight = bootstrapBlocks - 1; // last bootstrap block
+    chain[0].nBits = 0x207fffff;
+    chain[0].nWorkEMA = arith_uint256{1};
+    chain[0].nWorkEMA <<= 80;
+
+    chain[0].nSubsidyCache = bootstrapSubsidy;
+    chain[0].fSubsidyCacheValid = true;
+
+    // Seed realistic cumulative issuance from the full bootstrap phase
+    chain[0].nChainSubsidy = bootstrapBlocks * bootstrapSubsidy;
+    chain[0].fChainSubsidyValid = true;
+
+    // Rising work EMA
+    for (int i = 1; i <= 30; ++i) {
+        hashes[i] = BlockHash(uint256(i + 1));
+        chain[i].phashBlock = &hashes[i];
+        chain[i].pprev = &chain[i - 1];
+        chain[i].nHeight = chain[i - 1].nHeight + 1;
+        chain[i].nBits = 0x207fffff;
+        chain[i].nWorkEMA = chain[i - 1].nWorkEMA << 1;
+
+        const Amount subsidy = GetBlockSubsidy(&chain[i], consensusParams);
+        rewards.push_back(subsidy);
+
+        chain[i].nSubsidyCache = subsidy;
+        chain[i].fSubsidyCacheValid = true;
+        chain[i].nChainSubsidy = chain[i - 1].nChainSubsidy + subsidy;
+        chain[i].fChainSubsidyValid = true;
+    }
+
+    for (size_t i = 0; i < rewards.size(); ++i) {
+        std::cout << "block " << i
+                  << " subsidy = " << rewards[i].ToString()
+                  << std::endl;
+    }
+
+    // Falling work EMA
+    for (int i = 4; i <= 5; ++i) {
+        hashes[i] = BlockHash(uint256(1000 + i));
+        chain[i].phashBlock = &hashes[i];
+        chain[i].pprev = &chain[i - 1];
+        chain[i].nHeight = chain[i - 1].nHeight + 1;
+        chain[i].nBits = 0x207fffff;
+        chain[i].nWorkEMA = chain[i - 1].nWorkEMA >> 2; // divide by 4
+
+        const Amount subsidy = GetBlockSubsidy(&chain[i], consensusParams);
+        chain[i].nSubsidyCache = subsidy;
+        chain[i].fSubsidyCacheValid = true;
+        chain[i].nChainSubsidy = chain[i - 1].nChainSubsidy + subsidy;
+        chain[i].fChainSubsidyValid = true;
+    }
+
+    const Amount s1 = chain[1].nSubsidyCache;
+    const Amount s2 = chain[2].nSubsidyCache;
+    const Amount s3 = chain[3].nSubsidyCache;
+    const Amount s4 = chain[4].nSubsidyCache;
+    const Amount s5 = chain[5].nSubsidyCache;
+
+    BOOST_CHECK(s2 >= s1);
+    BOOST_CHECK(s3 >= s2);
+    BOOST_CHECK(s4 <= s3 || s4 == s3);
+    BOOST_CHECK(s5 <= s4 || s5 == s4);
+
+    BOOST_CHECK(s2 >= s1);
+    BOOST_CHECK(s3 >= s2);
+    BOOST_CHECK(s5 <= s4 || s5 == s4);
+
+    std::cout << "s1 = " << s1.ToString() << std::endl;
+    std::cout << "s2 = " << s2.ToString() << std::endl;
+    std::cout << "s3 = " << s3.ToString() << std::endl;
+    std::cout << "s4 = " << s4.ToString() << std::endl;
+    std::cout << "s5 = " << s5.ToString() << std::endl;
 }
 
 BOOST_AUTO_TEST_SUITE_END()

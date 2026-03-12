@@ -141,11 +141,19 @@ static bool GenerateBlock(ChainstateManager &chainman,
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
     const Consensus::Params &params = chainman.GetConsensus();
+    const bool is_regtest_like =
+        params.fPowAllowMinDifficultyBlocks && params.fPowNoRetargeting;
 
     while (max_tries > 0 &&
            block.nNonce < std::numeric_limits<uint32_t>::max() &&
-           !CheckProofOfWork(block.GetPoWHash(), block.nBits, params) &&
            !ShutdownRequested()) {
+        const auto pow_hash =
+            is_regtest_like ? block.GetHash() : block.GetPoWHash();
+
+        if (CheckProofOfWork(pow_hash, block.nBits, params)) {
+            break;
+        }
+
         ++block.nNonce;
         --max_tries;
     }
