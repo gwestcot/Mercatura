@@ -84,7 +84,7 @@ public:
     explicit CMainParams(const ChainOptions &opts) {
         m_chain_type = ChainType::MAIN;
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.nMcaBootstrapSubsidy = 5000;
+        consensus.nMcaBootstrapSubsidy = 500000;
         consensus.nMcaBootstrapBlocks = 4320;
         consensus.nMcaEmaWindow = 4320;
         consensus.nMcaAlphaNumerator = 1 << 16;
@@ -262,7 +262,7 @@ public:
     explicit CTestNetParams(const ChainOptions &opts) {
         m_chain_type = ChainType::TESTNET;
         consensus.nSubsidyHalvingInterval = 210000;
-        consensus.nMcaBootstrapSubsidy = 5000;
+        consensus.nMcaBootstrapSubsidy = 500000;
         consensus.nMcaBootstrapBlocks = 4320;
         consensus.nMcaEmaWindow = 4320;
         consensus.nMcaAlphaNumerator = 1 << 16;
@@ -423,7 +423,7 @@ public:
     explicit CRegTestParams(const ChainOptions &opts) {
         m_chain_type = ChainType::REGTEST;
         consensus.nSubsidyHalvingInterval = 150;
-        consensus.nMcaBootstrapSubsidy = 5000;
+        consensus.nMcaBootstrapSubsidy = 500000;
         consensus.nMcaBootstrapBlocks = 4320;
         consensus.nMcaEmaWindow = 4320;
         consensus.nMcaAlphaNumerator = 1 << 16;
