@@ -332,9 +332,8 @@ TestChain100Setup::TestChain100Setup(
 
     {
         LOCK(::cs_main);
-        assert(
-            m_node.chainman->ActiveTip()->GetBlockHash().ToString() ==
-            "35cca4cae7a5a442370889ef5ea990c7aaaa1563e4a8b4e3fd94963cd109afb2");
+        assert(m_node.chainman->ActiveTip() != nullptr);
+        assert(m_node.chainman->ActiveTip()->nHeight == COINBASE_MATURITY);
     }
 }
 

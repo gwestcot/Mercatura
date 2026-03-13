@@ -123,11 +123,6 @@ bool Proof::verify(const Amount &stakeUtxoDustThreshold,
         return state.Invalid(ProofValidationResult::NO_STAKE, "no-stake");
     }
 
-    if (!verify(stakeUtxoDustThreshold, state)) {
-        // state is set by verify.
-        return false;
-    }
-
     if (stakes.size() > AVALANCHE_MAX_PROOF_STAKES) {
         return state.Invalid(
             ProofValidationResult::TOO_MANY_UTXOS, "too-many-utxos",

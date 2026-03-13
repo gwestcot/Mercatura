@@ -648,7 +648,11 @@ BOOST_AUTO_TEST_CASE(verify) {
     auto key = CKey::MakeCompressedKey();
     const CPubKey pubkey = key.GetPubKey();
 
-    const Amount value = 2 * PROOF_DUST_THRESHOLD;
+    const Amount minStakeCollateral =
+        Params().GetConsensus().nMcaAvalancheMinStakeCollateral *
+        Amount::satoshi();
+
+    const Amount value = minStakeCollateral + PROOF_DUST_THRESHOLD;
     const uint32_t height = 10;
 
     ChainstateManager &chainman = *Assert(m_node.chainman);
@@ -790,6 +794,35 @@ BOOST_AUTO_TEST_CASE(verify) {
                         (expectedResult == ProofValidationResult::NONE));
             BOOST_CHECK(state.GetResult() == expectedResult);
         }
+    }
+
+    // MCA minimum total collateral
+    {
+        const Amount minStakeCollateral =
+            Params().GetConsensus().nMcaAvalancheMinStakeCollateral *
+            Amount::satoshi();
+
+        BOOST_REQUIRE(minStakeCollateral > PROOF_DUST_THRESHOLD);
+
+        const Amount belowMinimum = minStakeCollateral - 1 * SATOSHI;
+
+        COutPoint below_min_outpoint(TxId(m_rng.rand256()), m_rng.rand32());
+        CTxOut below_min_output(belowMinimum, GetScriptForRawPubKey(pubkey));
+        coins.AddCoin(below_min_outpoint, Coin(below_min_output, height, false),
+                      false);
+
+        runCheck(ProofValidationResult::DUST_THRESHOLD, below_min_outpoint,
+                 belowMinimum, height, false, key);
+
+        // Exact minimum should pass
+        COutPoint exact_min_outpoint(TxId(m_rng.rand256()), m_rng.rand32());
+        CTxOut exact_min_output(minStakeCollateral,
+                                GetScriptForRawPubKey(pubkey));
+        coins.AddCoin(exact_min_outpoint, Coin(exact_min_output, height, false),
+                      false);
+
+        runCheck(ProofValidationResult::NONE, exact_min_outpoint,
+                 minStakeCollateral, height, false, key);
     }
 
     // Duplicated input
