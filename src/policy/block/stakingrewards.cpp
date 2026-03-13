@@ -50,9 +50,8 @@ bool StakingRewardsPolicy::operator()(BlockPolicyValidationState &state) {
     }
 
     const Amount required = GetStakingRewardsAmount(m_blockReward);
-    for (auto &o : m_block.vtx[0]->vout) {
-        if (o.nValue < required) {
-            // This output doesn't qualify because its amount is too low.
+    for (const auto &o : m_block.vtx[0]->vout) {
+        if (o.nValue != required) {
             continue;
         }
 
