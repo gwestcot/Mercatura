@@ -65,6 +65,12 @@ struct Params {
     /** MCA security cap factor denominator */
     int nMcaSecurityCapDenominator;
 
+    /** MCA Avalanche staking collateral minimum in base units */
+    int64_t nMcaAvalancheMinStakeCollateral;
+
+    /** MCA Avalanche activation height */
+    int nMcaAvalancheActivationHeight;
+
     /** Block height at which BIP16 becomes active */
     int BIP16Height;
     /** Block height and hash at which BIP34 becomes active */

@@ -123,6 +123,11 @@ bool Proof::verify(const Amount &stakeUtxoDustThreshold,
         return state.Invalid(ProofValidationResult::NO_STAKE, "no-stake");
     }
 
+    if (!verify(stakeUtxoDustThreshold, state)) {
+        // state is set by verify.
+        return false;
+    }
+
     if (stakes.size() > AVALANCHE_MAX_PROOF_STAKES) {
         return state.Invalid(
             ProofValidationResult::TOO_MANY_UTXOS, "too-many-utxos",
@@ -179,6 +184,18 @@ bool Proof::verify(const Amount &stakeUtxoDustThreshold,
     if (!verify(stakeUtxoDustThreshold, state)) {
         // state is set by verify.
         return false;
+    }
+
+    const Amount minStakeCollateral =
+        chainman.GetParams().GetConsensus().nMcaAvalancheMinStakeCollateral *
+        Amount::satoshi();
+
+    if (getStakedAmount() < minStakeCollateral) {
+        return state.Invalid(
+            ProofValidationResult::DUST_THRESHOLD,
+            "stake-below-mca-minimum",
+            strprintf("%s < %s", getStakedAmount().ToString(),
+                      minStakeCollateral.ToString()));
     }
 
     const CBlockIndex *activeTip = chainman.ActiveTip();

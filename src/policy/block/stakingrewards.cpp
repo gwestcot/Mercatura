@@ -20,9 +20,18 @@
  */
 static constexpr int STAKING_REWARD_RATIO = 10;
 
+static bool IsMcaAvalancheActivated(const Consensus::Params &params,
+                                    const CBlockIndex *pprev) {
+    if (pprev == nullptr) {
+        return false;
+    }
+
+    return (pprev->nHeight + 1) >= params.nMcaAvalancheActivationHeight;
+}
+
 bool StakingRewardsPolicy::operator()(BlockPolicyValidationState &state) {
     if (!m_blockIndex.pprev ||
-        !IsCowperthwaiteEnabled(m_consensusParams, m_blockIndex.pprev)) {
+        !IsMcaAvalancheActivated(m_consensusParams, m_blockIndex.pprev)) {
         return true;
     }
 
@@ -76,7 +85,7 @@ Amount GetStakingRewardsAmount(const Amount &coinbaseValue) {
 
 bool IsStakingRewardsActivated(const Consensus::Params &params,
                                const CBlockIndex *pprev) {
-    return IsCowperthwaiteEnabled(params, pprev) &&
+    return IsMcaAvalancheActivated(params, pprev) &&
            gArgs.GetBoolArg("-avalanchestakingrewards",
                             params.enableStakingRewards);
 }
