@@ -10,7 +10,7 @@ class CBlockHeader;
 
 namespace MCA::PoW {
 
-constexpr size_t SCRATCHPAD_BYTES = 128ull * 1024ull * 1024ull;
+constexpr size_t SCRATCHPAD_BYTES = 512ull * 1024ull * 1024ull;
 constexpr size_t LINE_SIZE = 64;
 constexpr size_t NUM_LINES = SCRATCHPAD_BYTES / LINE_SIZE;      // 2,097,152
 constexpr size_t NUM_STEPS = NUM_LINES;                         // 2,097,152

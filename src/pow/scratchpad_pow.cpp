@@ -23,10 +23,10 @@ namespace {
 
 using Line = std::array<uint8_t, LINE_SIZE>;
 
-static_assert(SCRATCHPAD_BYTES == 134217728ull, "Scratchpad must be 128 MiB");
+static_assert(SCRATCHPAD_BYTES == 536870912ull, "Scratchpad must be 512 MiB");
 static_assert(LINE_SIZE == 64, "Line size must be 64 bytes");
-static_assert(NUM_LINES == 2097152ull, "Unexpected line count");
-static_assert(NUM_STEPS == 2097152ull, "Unexpected step count");
+static_assert(NUM_LINES == 8388608ull, "Unexpected line count");
+static_assert(NUM_STEPS == 8388608ull, "Unexpected step count");
 
 std::array<uint8_t, 32> SerializeHeaderForPoW(const CBlockHeader &header) {
     DataStream ss{};
