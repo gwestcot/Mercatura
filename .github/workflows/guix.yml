@@ -1,0 +1,557 @@
+name: Guix build
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+
+jobs:
+  guix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 480
+
+    strategy:
+      fail-fast: false
+      matrix:
+        host:
+          - x86_64-linux-gnu
+          - arm-linux-gnueabihf
+          - aarch64-linux-gnu
+          - riscv64-linux-gnu
+          - powerpc64-linux-gnu
+          - x86_64-w64-mingw32
+          - x86_64-apple-darwin
+          - arm64-apple-darwin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Enable user namespaces (Guix containers)
+        run: |
+          set -euxo pipefail
+          sudo sysctl -w kernel.unprivileged_userns_clone=1 || true
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_unconfined=0 || true
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          sysctl kernel.unprivileged_userns_clone || true
+          sysctl kernel.apparmor_restrict_unprivileged_unconfined || true
+          sysctl kernel.apparmor_restrict_unprivileged_userns || true
+
+      - name: Install base dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ca-certificates curl wget git xz-utils bzip2 zstd \
+            build-essential pkg-config python3 \
+            netbase
+
+      - name: Install Guix (retry 5x)
+        run: |
+          set -euxo pipefail
+
+          GUIX_BIN="/var/guix/profiles/per-user/root/current-guix/bin/guix"
+
+          # If Guix already exists (e.g., from a previous attempt in this job), skip.
+          if [ -x "$GUIX_BIN" ]; then
+            echo "Guix already installed at $GUIX_BIN"
+          else
+            for attempt in 1 2 3 4 5; do
+              echo "=== Install Guix attempt ${attempt}/5 ==="
+              cd /tmp
+
+              rm -f guix-install.sh
+              wget -q --tries=3 --timeout=30 \
+                https://git.savannah.gnu.org/cgit/guix.git/plain/etc/guix-install.sh \
+                -O guix-install.sh
+
+              chmod +x guix-install.sh
+
+              # Avoid "yes ... |" + pipefail broken-pipe issues:
+              # feed a single newline; installer will continue non-interactively.
+              if printf '\n' | sudo ./guix-install.sh; then
+                echo "Guix install command returned success on attempt ${attempt}"
+              else
+                echo "Guix install command returned non-zero on attempt ${attempt} (may still have installed)."
+              fi
+
+              # Verify installation (real success condition)
+              if [ -x "$GUIX_BIN" ]; then
+                echo "Guix is installed."
+                break
+              fi
+
+              if [ "${attempt}" -eq 5 ]; then
+                echo "Guix install failed after 5 attempts."
+                exit 1
+              fi
+
+              sleep_time=$((10 * (2 ** (attempt - 1))))
+              echo "Retrying in ${sleep_time}s..."
+              sleep "${sleep_time}"
+            done
+          fi
+
+          echo "/var/guix/profiles/per-user/root/current-guix/bin" >> "$GITHUB_PATH"
+          echo "/var/guix/profiles/per-user/root/current-guix/sbin" >> "$GITHUB_PATH"
+
+          "$GUIX_BIN" --version
+
+      - name: Install and load AppArmor profiles for Guix
+        run: |
+          set -euxo pipefail
+
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends apparmor apparmor-utils
+
+          GUIX_REAL="$(readlink -f /var/guix/profiles/per-user/root/current-guix/bin/guix)"
+          DAEMON_REAL="$(readlink -f /var/guix/profiles/per-user/root/current-guix/bin/guix-daemon)"
+
+          sudo tee /etc/apparmor.d/guix-ci >/dev/null <<EOF
+          abi <abi/4.0>,
+          include <tunables/global>
+
+          profile guix-ci-guix "${GUIX_REAL}" flags=(unconfined) {
+            userns,
+            include if exists <local/guix-ci-guix>
+          }
+
+          profile guix-ci-daemon "${DAEMON_REAL}" flags=(unconfined) {
+            userns,
+            include if exists <local/guix-ci-daemon>
+          }
+          EOF
+
+          sudo systemctl reload apparmor || sudo service apparmor reload || true
+          sudo apparmor_parser -r /etc/apparmor.d/guix-ci
+
+          echo "Resolved guix path:   ${GUIX_REAL}"
+          echo "Resolved daemon path: ${DAEMON_REAL}"
+          sudo aa-status || true
+
+      - name: Configure GUIX_LOCPATH
+        run: |
+          echo "GUIX_LOCPATH=/var/guix/profiles/per-user/root/current-guix/lib/locale" >> $GITHUB_ENV
+
+      - name: Prepare writable temp dirs for Guix
+        run: |
+          set -euxo pipefail
+
+          sudo mkdir -p /var/tmp/guix-tmp
+          sudo chmod 1777 /tmp
+          sudo chmod 1777 /var/tmp
+          sudo chmod 1777 /var/tmp/guix-tmp
+
+          echo "TMPDIR=/var/tmp/guix-tmp" >> "$GITHUB_ENV"
+          echo "TMP=/var/tmp/guix-tmp" >> "$GITHUB_ENV"
+          echo "TEMP=/var/tmp/guix-tmp" >> "$GITHUB_ENV"
+          echo "GIT_CONFIG_NOSYSTEM=1" >> "$GITHUB_ENV"
+
+      - name: Ensure guix-daemon is running
+        run: |
+          set -euxo pipefail
+
+          sudo mkdir -p /etc/systemd/system/guix-daemon.service.d
+
+          sudo tee /etc/systemd/system/guix-daemon.service.d/override.conf >/dev/null <<'EOF'
+          [Service]
+          Environment=TMPDIR=/var/tmp/guix-tmp
+          Environment=TMP=/var/tmp/guix-tmp
+          Environment=TEMP=/var/tmp/guix-tmp
+          Environment=GIT_CONFIG_NOSYSTEM=1
+          EOF
+
+          sudo systemctl daemon-reload
+
+          if systemctl is-active --quiet guix-daemon.service; then
+            echo "guix-daemon already running; restarting to apply env override"
+            sudo systemctl restart guix-daemon.service
+          else
+            echo "guix-daemon not running; starting via systemd"
+            sudo systemctl start guix-daemon.service
+          fi
+
+          sleep 3
+
+          sudo systemctl show guix-daemon.service --property=Environment
+          sudo systemctl status guix-daemon.service --no-pager || true
+          pgrep -a guix-daemon || true
+          guix gc --list-failures >/dev/null
+
+      - name: Authorize substitute server signing keys
+        run: |
+          set -euxo pipefail
+
+          GUIX_SHARE_1="/var/guix/profiles/per-user/root/current-guix/share/guix"
+          GUIX_SHARE_2="/usr/local/guix/current/share/guix"
+
+          if [ -d "$GUIX_SHARE_1" ]; then
+            KEYDIR="$GUIX_SHARE_1"
+          elif [ -d "$GUIX_SHARE_2" ]; then
+            KEYDIR="$GUIX_SHARE_2"
+          else
+            echo "Could not find Guix public key directory (share/guix)."
+            exit 1
+          fi
+
+          sudo guix archive --authorize < "${KEYDIR}/bordeaux.guix.gnu.org.pub"
+          sudo guix archive --authorize < "${KEYDIR}/ci.guix.gnu.org.pub"
+
+          if [ -f "${KEYDIR}/berlin.guix.gnu.org.pub" ]; then
+            sudo guix archive --authorize < "${KEYDIR}/berlin.guix.gnu.org.pub"
+          else
+            echo "No berlin.guix.gnu.org.pub found in ${KEYDIR}."
+          fi
+
+      - name: Compute VERSION and FORCE_VERSION from CMakeLists.txt
+        run: |
+          set -euxo pipefail
+          MAJOR="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_MAJOR[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+          MINOR="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_MINOR[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+          BUILD="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_BUILD[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+
+          VERSION="${MAJOR}.${MINOR}.${BUILD}"
+          FORCE_VERSION="${MAJOR}.${MINOR}"
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "FORCE_VERSION=$FORCE_VERSION" >> $GITHUB_ENV
+
+          echo "Computed VERSION=$VERSION"
+          echo "Computed FORCE_VERSION=$FORCE_VERSION"
+
+      - name: Cache depends downloads
+        uses: actions/cache@v5
+        with:
+          path: depends/sources
+          key: depends-sources-${{ hashFiles('depends/packages/*') }}
+          restore-keys: |
+            depends-sources-
+
+      - name: Cache SDKs
+        uses: actions/cache@v5
+        with:
+          path: depends/SDKs
+          key: depends-sdks-xcode15
+
+      - name: Fetch Xcode SDK
+        run: |
+          set -eux
+          mkdir -p depends/SDKs
+          if [ ! -d "depends/SDKs/Xcode-26.1.1-17B100-extracted-SDK-with-libcxx-headers" ]; then
+            cd depends/SDKs
+            wget --no-check-certificate -q \
+              https://bitcoincore.org/depends-sources/sdks/Xcode-26.1.1-17B100-extracted-SDK-with-libcxx-headers.tar
+            tar -xaf Xcode-26.1.1-17B100-extracted-SDK-with-libcxx-headers.tar
+          fi
+
+      - name: Run Guix build (single target via HOSTS) with retries
+        id: guix_build
+        continue-on-error: true
+        env:
+          HOSTS: ${{ matrix.host }}
+          JOBS: "2"
+          TMPDIR: /var/tmp/guix-tmp
+          TMP: /var/tmp/guix-tmp
+          TEMP: /var/tmp/guix-tmp
+          GIT_CONFIG_NOSYSTEM: "1"
+          SUBSTITUTE_URLS: "https://bordeaux-singapore-mirror.cbaines.net https://bordeaux-us-east-mirror.cbaines.net https://mirrors.sjtug.sjtu.edu.cn/guix https://mirror.yandex.ru/mirrors/guix/ https://berlin.guix.gnu.org https://bordeaux.guix.gnu.org https://ci.guix.gnu.org https://hydra-guix-129.guix.gnu.org https://berlin-guix.jing.rocks https://bordeaux-guix.jing.rocks https://mirrors.sjtug.sjtu.edu.cn/guix-bordeaux"
+
+        run: |
+          set -euxo pipefail
+
+          max=5
+          n=1
+          while true; do
+            echo "Guix build attempt ${n}/${max} (HOSTS=${HOSTS})"
+            if ./contrib/guix/guix-build; then
+              break
+            fi
+
+            if [ "${n}" -ge "${max}" ]; then
+              echo "Guix build failed after ${max} attempts."
+              exit 1
+            fi
+
+            # Backoff (10s, 20s, 40s, 80s...)
+            sleep_time=$((10 * (2 ** (n - 1))))
+            echo "Retrying in ${sleep_time}s..."
+            sleep "${sleep_time}"
+            n=$((n + 1))
+          done
+
+      - name: Collect Guix inner logs for this host
+        if: steps.guix_build.outcome == 'failure'
+        env:
+          HOST: ${{ matrix.host }}
+        run: |
+          set -euxo pipefail
+
+          OUTDIR="$RUNNER_TEMP/guix-inner-logs-$HOST"
+          mkdir -p "$OUTDIR/raw" "$OUTDIR/unpacked" "$OUTDIR/filtered"
+
+          echo "$HOST" > "$OUTDIR/host.txt"
+
+          echo "== list all Guix drv logs =="
+          find /var/log/guix/drvs -type f | sort > "$OUTDIR/raw/all-drv-logs.txt" || true
+
+          echo "== copy all compressed drv logs =="
+          find /var/log/guix/drvs -type f -name '*.drv.gz' -exec cp {} "$OUTDIR/raw/" \; || true
+
+          echo "== unpack drv logs =="
+          shopt -s nullglob
+          for f in "$OUTDIR"/raw/*.drv.gz; do
+            gzip -cd "$f" > "$OUTDIR/unpacked/$(basename "$f" .gz)" || true
+          done
+
+          echo "== collect likely relevant logs =="
+          find /var/log/guix/drvs -type f -name '*.drv.gz' | \
+            grep -E 'checkout|glibc|certvalidator|python-' \
+            > "$OUTDIR/filtered/matches.txt" || true
+
+          while IFS= read -r f; do
+            [ -n "$f" ] || continue
+            cp "$f" "$OUTDIR/filtered/" || true
+            gzip -cd "$f" > "$OUTDIR/filtered/$(basename "$f" .gz)" || true
+          done < "$OUTDIR/filtered/matches.txt"
+
+          echo "== make quick summary =="
+          {
+            echo "Host: $HOST"
+            echo
+            echo "Relevant matched logs:"
+            cat "$OUTDIR/filtered/matches.txt" 2>/dev/null || true
+            echo
+            for f in "$OUTDIR"/filtered/*.drv "$OUTDIR"/unpacked/*.drv; do
+              [ -e "$f" ] || continue
+              echo "===== $f ====="
+              tail -n 200 "$f" || true
+              echo
+            done
+          } > "$OUTDIR/summary-tail.txt"
+
+      - name: Upload Guix inner logs for this host
+        if: steps.guix_build.outcome == 'failure'
+        uses: actions/upload-artifact@v7
+        with:
+          name: guix-inner-logs-${{ matrix.host }}
+          path: ${{ runner.temp }}/guix-inner-logs-${{ matrix.host }}
+          if-no-files-found: warn
+
+      - name: Fail job if Guix build failed
+        if: steps.guix_build.outcome == 'failure'
+        run: exit 1
+
+      - name: Upload SHA256SUMS.part
+        uses: actions/upload-artifact@v7
+        with:
+          name: sha256sums-part-${{ matrix.host }}
+          path: |
+            guix-build*/output/*/SHA256SUMS.part
+          if-no-files-found: error
+
+      - name: Collect selected artifacts
+        run: |
+          set -euxo pipefail
+
+          OUTROOT="$(ls -d guix-build* 2>/dev/null | head -n1)/output"
+          if [ -z "${OUTROOT}" ] || [ ! -d "${OUTROOT}" ]; then
+            echo "No guix output directory found (expected guix-build*/output)."
+            exit 1
+          fi
+
+          mkdir -p selected-artifacts
+
+          find "${OUTROOT}" -type f \
+            \( \
+              -name "groestlcoin-${FORCE_VERSION}-${{ matrix.host }}.tar.gz" -o \
+              -name "groestlcoin-${FORCE_VERSION}-${{ matrix.host }}-debug.tar.gz" -o \
+              -name "groestlcoin-${FORCE_VERSION}-${{ matrix.host }}.zip" -o \
+              -name "groestlcoin-${FORCE_VERSION}-${{ matrix.host }}-unsigned.tar.gz" -o \
+              -name "groestlcoin-${FORCE_VERSION}-${{ matrix.host }}-unsigned.zip" -o \
+              -name "groestlcoin-${FORCE_VERSION}-${{ matrix.host }}-codesigning.tar.gz" -o \
+              -name "groestlcoin-${FORCE_VERSION}.tar.gz" -o \
+              -name "groestlcoin-${FORCE_VERSION}-codesignatures-*.tar.gz" -o \
+              -name "groestlcoin-${FORCE_VERSION}-win64-debug.zip" -o \
+              -name "groestlcoin-${FORCE_VERSION}-win64-setup-unsigned.exe" -o \
+              -name "groestlcoin-${FORCE_VERSION}-win64-unsigned.zip" -o \
+              -name "groestlcoin-${FORCE_VERSION}-win64-codesigning.tar.gz" \
+            \) \
+            -exec cp -v {} selected-artifacts/ \;
+
+          echo "Selected artifacts:"
+          ls -lah selected-artifacts || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: guix-${{ matrix.host }}
+          path: selected-artifacts/
+          if-no-files-found: error
+
+  guix-attest:
+    name: Guix attest (all hosts)
+    runs-on: ubuntu-24.04
+    needs: guix
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Install base dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            ca-certificates git coreutils diffutils
+
+      - name: Download all SHA256SUMS.part artifacts
+        uses: actions/download-artifact@v8
+        with:
+          path: sha256sums-parts
+
+      - name: Reconstruct OUTDIR_BASE layout
+        run: |
+          set -euxo pipefail
+
+          mkdir -p guix-attest-work/output
+
+          # Each artifact contains output/<host>/SHA256SUMS.part
+          find sha256sums-parts -name SHA256SUMS.part | while read -r part; do
+            host="$(basename "$(dirname "$part")")"
+            mkdir -p "guix-attest-work/output/${host}"
+            cp "$part" "guix-attest-work/output/${host}/SHA256SUMS.part"
+          done
+
+          echo "Reconstructed output tree:"
+          find guix-attest-work/output -type f
+
+      - name: Clone guix.sigs
+        run: |
+          set -euxo pipefail
+          rm -rf guix.sigs
+          git clone https://github.com/groestlcoin/guix.sigs.git
+
+      - name: Compute VERSION and FORCE_VERSION from CMakeLists.txt
+        run: |
+          set -euxo pipefail
+          MAJOR="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_MAJOR[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+          MINOR="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_MINOR[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+          BUILD="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_BUILD[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+
+          VERSION="${MAJOR}.${MINOR}.${BUILD}"
+          FORCE_VERSION="${MAJOR}.${MINOR}"
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "FORCE_VERSION=$FORCE_VERSION" >> $GITHUB_ENV
+
+      - name: Run guix-attest (NO_SIGN, all hosts)
+        env:
+          OUTDIR_BASE: ${{ github.workspace }}/guix-attest-work/output
+          GUIX_SIGS_REPO: ${{ github.workspace }}/guix.sigs
+          SIGNER: jackielove4u
+          NO_SIGN: "1"
+          VERSION: ${{ env.FORCE_VERSION }}
+        run: |
+          set -euxo pipefail
+          ./contrib/guix/guix-attest
+
+      - name: Show guix.sigs tree
+        run: |
+          set -euxo pipefail
+          find guix.sigs -maxdepth 4 -type f -print
+          find guix.sigs -maxdepth 4 -type d -print
+
+      - name: Upload attestations
+        uses: actions/upload-artifact@v7
+        with:
+          name: guix-attest-${{ env.FORCE_VERSION }}
+          path: |
+            guix.sigs/${{ env.FORCE_VERSION }}/
+          if-no-files-found: error
+
+  release:
+    name: Release bundle (tags or manual)
+    runs-on: ubuntu-24.04
+    needs:
+      - guix
+      - guix-attest
+    if: |
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')) ||
+      github.event_name == 'workflow_dispatch'
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Compute VERSION and FORCE_VERSION from CMakeLists.txt
+        run: |
+          set -euxo pipefail
+          MAJOR="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_MAJOR[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+          MINOR="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_MINOR[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+          BUILD="$(sed -n 's/^[[:space:]]*set(CLIENT_VERSION_BUILD[[:space:]]\+\([0-9]\+\)).*/\1/p' CMakeLists.txt | head -n1)"
+
+          VERSION="${MAJOR}.${MINOR}.${BUILD}"
+          FORCE_VERSION="${MAJOR}.${MINOR}"
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "FORCE_VERSION=$FORCE_VERSION" >> $GITHUB_ENV
+
+      - name: Download all artifacts (guix-* + guix-attest-*)
+        uses: actions/download-artifact@v8
+        with:
+          path: dist
+
+      - name: Assemble release bundle
+        run: |
+          set -euxo pipefail
+
+          rm -rf release-bundle
+          mkdir -p release-bundle
+
+          # Copy only the release-relevant outputs from guix-* artifacts
+          find dist -type f -path "*/guix-*/*" \
+            \( \
+              -name "groestlcoin-${FORCE_VERSION}.tar.gz" -o \
+              -name "groestlcoin-${FORCE_VERSION}-*.tar.gz" -o \
+              -name "groestlcoin-${FORCE_VERSION}-*.zip" -o \
+              -name "groestlcoin-${FORCE_VERSION}-win64-setup-unsigned.exe" \
+            \) \
+            ! -name "*debug*" \
+            ! -name "*codesigning*" \
+            ! -name "*codesignatures*" \
+            -exec cp -v {} release-bundle/ \;
+
+          # Add attest SHA256SUMS (rename from noncodesigned.SHA256SUMS)
+          ATTEST_DIR="dist/guix-attest-${FORCE_VERSION}"
+          if [ ! -d "${ATTEST_DIR}" ]; then
+            echo "ERR: missing attest artifact dir: ${ATTEST_DIR}"
+            echo "Available in dist:"
+            ls -lah dist || true
+            exit 1
+          fi
+
+          ATTEST_FILE="$(find "${ATTEST_DIR}" -type f -name "noncodesigned.SHA256SUMS" | head -n1)"
+          if [ -z "${ATTEST_FILE}" ]; then
+            echo "ERR: could not find noncodesigned.SHA256SUMS under ${ATTEST_DIR}"
+            find "${ATTEST_DIR}" -maxdepth 6 -type f -print || true
+            exit 1
+          fi
+
+          cp -v "${ATTEST_FILE}" "release-bundle/SHA256SUMS"
+
+          echo "Release bundle contents:"
+          ls -lah release-bundle
+
+      - name: Upload release bundle artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-bundle-${{ github.ref_name }}
+          path: release-bundle/
+          if-no-files-found: error
