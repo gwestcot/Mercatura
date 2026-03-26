@@ -155,15 +155,15 @@ static int AppInitRPC(int argc, char* argv[])
             strUsage += FormatParagraph(LicenseInfo());
         } else {
             strUsage += "\n"
-                "The groestlcoin-cli utility provides a command line interface to interact with a " CLIENT_NAME " RPC server.\n"
+                "The mercatura-cli utility provides a command line interface to interact with a " CLIENT_NAME " RPC server.\n"
                 "\nIt can be used to query network information, manage wallets, create or broadcast transactions, and control the " CLIENT_NAME " server.\n"
                 "\nUse the \"help\" command to list all commands. Use \"help <command>\" to show help for that command.\n"
                 "The -named option allows you to specify parameters using the key=value format, eliminating the need to pass unused positional parameters.\n"
                 "\n"
-                "Usage: groestlcoin-cli [options] <command> [params]\n"
-                "or:    groestlcoin-cli [options] -named <command> [name=value]...\n"
-                "or:    groestlcoin-cli [options] help\n"
-                "or:    groestlcoin-cli [options] help <command>\n"
+                "Usage: mercatura-cli [options] <command> [params]\n"
+                "or:    mercatura-cli [options] -named <command> [name=value]...\n"
+                "or:    mercatura-cli [options] help\n"
+                "or:    mercatura-cli [options] help <command>\n"
                 "\n";
             strUsage += "\n" + gArgs.GetHelpMessage();
         }

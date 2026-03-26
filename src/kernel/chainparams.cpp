@@ -118,11 +118,11 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
          * a large 32-bit integer with any alignment.
          */
-        pchMessageStart[0] = 0xf9;
-        pchMessageStart[1] = 0xbe;
-        pchMessageStart[2] = 0xb4;
-        pchMessageStart[3] = 0xd4;
-        nDefaultPort = 1331;
+        pchMessageStart[0] = 0x4d;
+        pchMessageStart[1] = 0x43;
+        pchMessageStart[2] = 0x41;
+        pchMessageStart[3] = 0x31;
+        nDefaultPort = 15151;
         nPruneAfterHeight = 10000000;
         m_assumed_blockchain_size = 6; // du -cha --max-depth=1 --exclude=debug.log --exclude=.groestlcoin/testnet3 --exclude=.groestlcoin/signet --exclude=.groestlcoin/regtest .groestlcoin
         m_assumed_chain_state_size = 1; // du -cha --max-depth=1 .groestlcoin/chainstate/
@@ -137,18 +137,18 @@ public:
         // This is fine at runtime as we'll fall back to using them as an addrfetch if they don't support the
         // service bits we want, but we should get them updated to support all service bits wanted by any
         // release ASAP to avoid it where possible.
-        vSeeds.emplace_back("dnsseed1.groestlcoin.org."); // only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("dnsseed2.groestlcoin.org."); // only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("dnsseed3.groestlcoin.org."); // only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("dnsseed4.groestlcoin.org."); // only supports x1, x5, x9, and xd
+	vSeeds.emplace_back("seed1.mercatura.invalid.");
+	vSeeds.emplace_back("seed2.mercatura.invalid.");
+	vSeeds.emplace_back("seed3.mercatura.invalid.");
+	vSeeds.emplace_back("seed4.mercatura.invalid.");
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,36);
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,50);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        bech32_hrp = "grs";
+        bech32_hrp = "mca";
 
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_main), std::end(chainparams_seed_main));
 
@@ -210,11 +210,11 @@ public:
         consensus.nMinimumChainWork = uint256{"00000000000000000000000000000000000000000000000000005ed0123d4c39"}; // groestlcoin-cli -testnet getblockheader 000000f5df12ddd548e44388bb1e2f9960f35b97123adfd523a964b1c12bacef | jq '{chainwork}'
         consensus.defaultAssumeValid = uint256{"000000f5df12ddd548e44388bb1e2f9960f35b97123adfd523a964b1c12bacef"}; // groestlcoin-cli -testnet getblockhash 4356000
 
-        pchMessageStart[0] = 0x0b;
-        pchMessageStart[1] = 0x11;
-        pchMessageStart[2] = 0x09;
-        pchMessageStart[3] = 0x07;
-        nDefaultPort = 17777;
+        pchMessageStart[0] = 0x4d;
+        pchMessageStart[1] = 0x43;
+        pchMessageStart[2] = 0x41;
+        pchMessageStart[3] = 0x32;
+        nDefaultPort = 15252;
         nPruneAfterHeight = 1000000;
         m_assumed_blockchain_size = 3; //  du -cha --max-depth=1 .groestlcoin/testnet3
         m_assumed_chain_state_size = 1; // du -cha --max-depth=1 .groestlcoin/testnet3/chainstate/
@@ -227,8 +227,8 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet-seed1.groestlcoin.org."); // only supports x1, x5, x9, and xd
-        vSeeds.emplace_back("testnet-seed2.groestlcoin.org."); // only supports x1, x5, x9, and xd
+	vSeeds.emplace_back("testnet-seed1.mercatura.invalid.");
+	vSeeds.emplace_back("testnet-seed2.mercatura.invalid.");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -236,7 +236,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "tgrs";
+        bech32_hrp = "tmca";
 
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_test), std::end(chainparams_seed_test));
 
@@ -296,10 +296,10 @@ public:
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
 
-        pchMessageStart[0] = 0x1c;
-        pchMessageStart[1] = 0x16;
-        pchMessageStart[2] = 0x3f;
-        pchMessageStart[3] = 0x28;
+        pchMessageStart[0] = 0x4d;
+        pchMessageStart[1] = 0x43;
+        pchMessageStart[2] = 0x41;
+        pchMessageStart[3] = 0x33;
         nDefaultPort = 48333;
         nPruneAfterHeight = 1000;
         m_assumed_blockchain_size = 0;
@@ -321,8 +321,8 @@ public:
         vFixedSeeds.clear();
         vSeeds.clear();
         // nodes with support for servicebits filtering should be at the top
-        vSeeds.emplace_back("testnet4-seed1.groestlcoin.org.");
-        vSeeds.emplace_back("testnet4-seed2.groestlcoin.org.");
+	vSeeds.emplace_back("testnet4-seed1.mercatura.invalid.");
+	vSeeds.emplace_back("testnet4-seed2.mercatura.invalid.");
 
         base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,111);
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,196);
@@ -330,7 +330,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "tgrs";
+        bech32_hrp = "tmca";
 
         vFixedSeeds = std::vector<uint8_t>(std::begin(chainparams_seed_testnet4), std::end(chainparams_seed_testnet4));
 
@@ -449,7 +449,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "tgrs";
+        bech32_hrp = "tmca";
 
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
@@ -499,11 +499,11 @@ public:
         consensus.nMinimumChainWork = uint256{};
         consensus.defaultAssumeValid = uint256{};
 
-        pchMessageStart[0] = 0xfa;
-        pchMessageStart[1] = 0xbf;
-        pchMessageStart[2] = 0xb5;
-        pchMessageStart[3] = 0xda;
-        nDefaultPort = 18888;
+        pchMessageStart[0] = 0x4d;
+        pchMessageStart[1] = 0x43;
+        pchMessageStart[2] = 0x41;
+        pchMessageStart[3] = 0x34;
+        nDefaultPort = 15454;
         nPruneAfterHeight = opts.fastprune ? 100 : 10000000;
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
@@ -562,7 +562,7 @@ public:
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x35, 0x87, 0xCF};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x35, 0x83, 0x94};
 
-        bech32_hrp = "grsrt";
+        bech32_hrp = "rmca";
 
         // Copied from Testnet4.
         m_headers_sync_params = HeadersSyncParams{
