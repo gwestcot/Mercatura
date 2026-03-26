@@ -21,7 +21,7 @@ using util::Join;
  * for both groestlcoind and groestlcoin-qt, to make it harder for attackers to
  * target servers or GUI users specifically.
  */
-const std::string UA_NAME("Groestlcoin");
+const std::string UA_NAME("Mercatura");
 
 
 #include <bitcoin-build-info.h>
@@ -89,7 +89,7 @@ std::string CopyrightHolders(const std::string& strPrefix)
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/Groestlcoin/groestlcoin>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/gwestcot/Mercatura>";
 
     return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR).translated + " ") + "\n" +
            "\n" +

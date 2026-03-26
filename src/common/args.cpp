@@ -34,7 +34,7 @@
 #include <utility>
 #include <variant>
 
-const char * const BITCOIN_CONF_FILENAME = "groestlcoin.conf";
+const char * const BITCOIN_CONF_FILENAME = "mercatura.conf";
 const char * const BITCOIN_SETTINGS_FILENAME = "settings.json";
 
 ArgsManager gArgs;
