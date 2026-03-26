@@ -55,7 +55,7 @@ CAmount GetDustThreshold(const CTxOut& txout, const CFeeRate& dustRelayFeeIn)
     if (txout.scriptPubKey.IsWitnessProgram(witnessversion, witnessprogram)) {
         // sum the sizes of the parts of a transaction input
         // with 75% segwit discount applied to the script size.
-        nSize += (32 + 4 + 1 + (107 / WITNESS_SCALE_FACTOR) + 4);
+        nSize += (32 + 4 + 1 + 107 + 4);
     } else {
         nSize += (32 + 4 + 1 + 107 + 4); // the 148 mentioned above
     }
@@ -394,15 +394,15 @@ int64_t GetSigOpsAdjustedWeight(int64_t weight, int64_t sigop_cost, unsigned int
 
 int64_t GetVirtualTransactionSize(int64_t nWeight, int64_t nSigOpCost, unsigned int bytes_per_sigop)
 {
-    return (GetSigOpsAdjustedWeight(nWeight, nSigOpCost, bytes_per_sigop) + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR;
+    return GetSigOpsAdjustedWeight(nWeight, nSigOpCost, bytes_per_sigop);
 }
 
 int64_t GetVirtualTransactionSize(const CTransaction& tx, int64_t nSigOpCost, unsigned int bytes_per_sigop)
 {
-    return GetVirtualTransactionSize(GetTransactionWeight(tx), nSigOpCost, bytes_per_sigop);
+    return GetVirtualTransactionSize(GetSerializeSize(TX_WITH_WITNESS(tx)), nSigOpCost, bytes_per_sigop);
 }
 
 int64_t GetVirtualTransactionInputSize(const CTxIn& txin, int64_t nSigOpCost, unsigned int bytes_per_sigop)
 {
-    return GetVirtualTransactionSize(GetTransactionInputWeight(txin), nSigOpCost, bytes_per_sigop);
+    return GetVirtualTransactionSize(GetSerializeSize(txin), nSigOpCost, bytes_per_sigop);
 }
