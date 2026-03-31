@@ -4,6 +4,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <primitives/block.h>
+#include <crypto/mercahash.h>
 #include <groestlcoin.h>
 #include <tinyformat.h>
 #include <memory>
@@ -12,7 +13,7 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    return (XCoin::GroestlHashWriter{} << *this).GetHash(); // GRS
+    return MercaHashFromHeader(*this);
 }
 
 std::string CBlock::ToString() const

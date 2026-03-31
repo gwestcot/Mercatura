@@ -65,7 +65,6 @@ add_library(bitcoin_consensus STATIC EXCLUDE_FROM_ALL
   groestlcoin-hash.cpp
   groestlcoin.cpp
   hash.cpp
-  crypto/mercahash.cpp
   primitives/block.cpp
   primitives/transaction.cpp
   pubkey.cpp
