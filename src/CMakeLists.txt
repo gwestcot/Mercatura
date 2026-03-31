@@ -398,11 +398,22 @@ if(BUILD_UTIL)
   install_binary_component(groestlcoin-util HAS_MANPAGE)
 endif()
 
+if(BUILD_UTIL)
+  add_executable(mercatura-genesis
+    mercatura-genesis.cpp
+  )
+  add_windows_application_manifest(mercatura-genesis)
+  target_link_libraries(mercatura-genesis
+    core_interface
+    bitcoin_common
+    bitcoin_util
+  )
+  install_binary_component(mercatura-genesis INTERNAL)
+endif()
 
 if(BUILD_GUI)
   add_subdirectory(qt)
 endif()
-
 
 if(BUILD_KERNEL_LIB)
   add_subdirectory(kernel)
