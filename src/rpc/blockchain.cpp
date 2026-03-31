@@ -293,7 +293,7 @@ static RPCHelpMan waitfornewblock()
         "waitfornewblock",
         "Waits for any new block and returns useful info about it.\n"
                 "\nReturns the current block on timeout or exit.\n"
-                "\nMake sure to use no RPC timeout (groestlcoin-cli -rpcclienttimeout=0)",
+                "\nMake sure to use no RPC timeout in the CLI (-rpcclienttimeout=0)",
                 {
                     {"timeout", RPCArg::Type::NUM, RPCArg::Default{0}, "Time in milliseconds to wait for a response. 0 indicates no timeout."},
                     {"current_tip", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Method waits for the chain tip to differ from this."},
@@ -1935,7 +1935,7 @@ static RPCHelpMan getblockstats()
 {
     return RPCHelpMan{
         "getblockstats",
-        "Compute per block statistics for a given window. All amounts are in satoshis.\n"
+        "Compute per block statistics for a given window. All amounts are in units.\n"
                 "It won't work for some heights with pruning.\n",
                 {
                     {"hash_or_height", RPCArg::Type::NUM, RPCArg::Optional::NO, "The block hash or height of the target block",
@@ -1954,10 +1954,10 @@ static RPCHelpMan getblockstats()
             RPCResult::Type::OBJ, "", "",
             {
                 {RPCResult::Type::NUM, "avgfee", /*optional=*/true, "Average fee in the block"},
-                {RPCResult::Type::NUM, "avgfeerate", /*optional=*/true, "Average feerate (in gros per virtual byte)"},
+                {RPCResult::Type::NUM, "avgfeerate", /*optional=*/true, "Average feerate (in units per virtual byte)"},
                 {RPCResult::Type::NUM, "avgtxsize", /*optional=*/true, "Average transaction size"},
                 {RPCResult::Type::STR_HEX, "blockhash", /*optional=*/true, "The block hash (to check for potential reorgs)"},
-                {RPCResult::Type::ARR_FIXED, "feerate_percentiles", /*optional=*/true, "Feerates at the 10th, 25th, 50th, 75th, and 90th percentile weight unit (in gros per virtual byte)",
+                {RPCResult::Type::ARR_FIXED, "feerate_percentiles", /*optional=*/true, "Feerates at the 10th, 25th, 50th, 75th, and 90th percentile weight unit (in units per virtual byte)",
                 {
                     {RPCResult::Type::NUM, "10th_percentile_feerate", "The 10th percentile feerate"},
                     {RPCResult::Type::NUM, "25th_percentile_feerate", "The 25th percentile feerate"},
@@ -1968,13 +1968,13 @@ static RPCHelpMan getblockstats()
                 {RPCResult::Type::NUM, "height", /*optional=*/true, "The height of the block"},
                 {RPCResult::Type::NUM, "ins", /*optional=*/true, "The number of inputs (excluding coinbase)"},
                 {RPCResult::Type::NUM, "maxfee", /*optional=*/true, "Maximum fee in the block"},
-                {RPCResult::Type::NUM, "maxfeerate", /*optional=*/true, "Maximum feerate (in gros per virtual byte)"},
+                {RPCResult::Type::NUM, "maxfeerate", /*optional=*/true, "Maximum feerate (in units per virtual byte)"},
                 {RPCResult::Type::NUM, "maxtxsize", /*optional=*/true, "Maximum transaction size"},
                 {RPCResult::Type::NUM, "medianfee", /*optional=*/true, "Truncated median fee in the block"},
                 {RPCResult::Type::NUM, "mediantime", /*optional=*/true, "The block median time past"},
                 {RPCResult::Type::NUM, "mediantxsize", /*optional=*/true, "Truncated median transaction size"},
                 {RPCResult::Type::NUM, "minfee", /*optional=*/true, "Minimum fee in the block"},
-                {RPCResult::Type::NUM, "minfeerate", /*optional=*/true, "Minimum feerate (in gros per virtual byte)"},
+                {RPCResult::Type::NUM, "minfeerate", /*optional=*/true, "Minimum feerate (in units per virtual byte)"},
                 {RPCResult::Type::NUM, "mintxsize", /*optional=*/true, "Minimum transaction size"},
                 {RPCResult::Type::NUM, "outs", /*optional=*/true, "The number of outputs"},
                 {RPCResult::Type::NUM, "subsidy", /*optional=*/true, "The block subsidy"},
@@ -2124,7 +2124,7 @@ static RPCHelpMan getblockstats()
             minfee = std::min(minfee, txfee);
             totalfee += txfee;
 
-            // New feerate uses satoshis per virtual byte instead of per serialized byte
+            // New feerate uses units per virtual byte instead of per serialized byte
             CAmount feerate = weight ? (txfee * WITNESS_SCALE_FACTOR) / weight : 0;
             if (do_feerate_percentiles) {
                 feerate_array.emplace_back(feerate, weight);
@@ -2144,7 +2144,7 @@ static RPCHelpMan getblockstats()
 
     UniValue ret_all(UniValue::VOBJ);
     ret_all.pushKV("avgfee", (block.vtx.size() > 1) ? totalfee / (block.vtx.size() - 1) : 0);
-    ret_all.pushKV("avgfeerate", total_weight ? (totalfee * WITNESS_SCALE_FACTOR) / total_weight : 0); // Unit: gro/vbyte
+    ret_all.pushKV("avgfeerate", total_weight ? (totalfee * WITNESS_SCALE_FACTOR) / total_weight : 0); // Unit: MCA/vbyte
     ret_all.pushKV("avgtxsize", (block.vtx.size() > 1) ? total_size / (block.vtx.size() - 1) : 0);
     ret_all.pushKV("blockhash", pindex.GetBlockHash().GetHex());
     ret_all.pushKV("feerate_percentiles", std::move(feerates_res));
@@ -3354,7 +3354,7 @@ static RPCHelpMan loadtxoutset()
         "Meanwhile, the original chainstate will complete the initial block download process in "
         "the background, eventually validating up to the block that the snapshot is based upon.\n\n"
 
-        "The result is a usable groestlcoind instance that is current with the network tip in a "
+        "The result is a usable mercaturad instance that is current with the network tip in a "
         "matter of minutes rather than hours. UTXO snapshot are typically obtained from "
         "third-party sources (HTTP, torrent, etc.) which is reasonable since their "
         "contents are always checked by hash.\n\n"

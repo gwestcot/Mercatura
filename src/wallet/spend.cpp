@@ -81,7 +81,7 @@ static std::optional<int64_t> MaxInputWeight(const Descriptor& desc, const std::
             const int64_t scriptsig_len = is_segwit ? 1 : GetSizeOfCompactSize(*sat_weight / WITNESS_SCALE_FACTOR);
             const int64_t witstack_len = is_segwit ? GetSizeOfCompactSize(*elems_count) : (tx_is_segwit ? 1 : 0);
             // previous txid + previous vout + sequence + scriptsig len + witstack size + scriptsig or witness
-            // NOTE: sat_weight already accounts for the witness discount accordingly.
+            // NOTE: charged weight is treated consistently with Mercatura's no-discount policy.
             return (32 + 4 + 4 + scriptsig_len) * WITNESS_SCALE_FACTOR + witstack_len + *sat_weight;
         }
     }

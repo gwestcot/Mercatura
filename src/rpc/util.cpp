@@ -41,7 +41,7 @@ using util::SplitString;
 using util::TrimString;
 
 const std::string UNIX_EPOCH_TIME = "UNIX epoch time";
-const std::string EXAMPLE_ADDRESS[2] = {"grs1qg5ujdyhf263a04hnym8j5we8v0d8mjgtkj0zp3", "grs1qk2hc97l298f9h56r3ypwpa6z28476pfresee56"};
+const std::string EXAMPLE_ADDRESS[2] = {"mca1qg5ujdyhf263a04hnym8j5we8v0d8mjgtkj0zp3", "mca1qk2hc97l298f9h56r3ypwpa6z28476pfresee56"};
 
 std::string GetAllOutputTypes()
 {
@@ -110,7 +110,7 @@ CAmount AmountFromValue(const UniValue& value, int decimals)
 CFeeRate ParseFeeRate(const UniValue& json)
 {
     CAmount val{AmountFromValue(json)};
-    if (val >= COIN) throw JSONRPCError(RPC_INVALID_PARAMETER, "Fee rates larger than or equal to 1GRS/kvB are not accepted");
+    if (val >= COIN) throw JSONRPCError(RPC_INVALID_PARAMETER, "Fee rates larger than or equal to 1 MCA/kvB are not accepted");
     return CFeeRate{val};
 }
 

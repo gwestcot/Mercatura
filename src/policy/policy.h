@@ -22,7 +22,7 @@ class CFeeRate;
 class CScript;
 
 /** Default for -blockmaxweight, which controls the range of block weights the mining code will create **/
-static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MAX_BLOCK_WEIGHT};
+static constexpr unsigned int DEFAULT_BLOCK_MAX_WEIGHT{MCA_INITIAL_MAX_BLOCK_WEIGHT};
 /** Default for -blockreservedweight **/
 static constexpr unsigned int DEFAULT_BLOCK_RESERVED_WEIGHT{8000};
 /** Default sigops cost to reserve for coinbase transaction outputs when creating block templates. */
@@ -45,7 +45,7 @@ static constexpr unsigned int MAX_STANDARD_TX_SIGOPS_COST{MAX_BLOCK_SIGOPS_COST/
 /** The maximum number of potentially executed legacy signature operations in a single standard tx */
 static constexpr unsigned int MAX_TX_LEGACY_SIGOPS{2'500};
 /** Default for -incrementalrelayfee, which sets the minimum feerate increase for mempool limiting or replacement **/
-static constexpr unsigned int DEFAULT_INCREMENTAL_RELAY_FEE{100};
+static constexpr unsigned int DEFAULT_INCREMENTAL_RELAY_FEE{1};
 /** Default for -bytespersigop */
 static constexpr unsigned int DEFAULT_BYTES_PER_SIGOP{20};
 /** Default for -permitbaremultisig */
@@ -65,9 +65,9 @@ static constexpr unsigned int MAX_STANDARD_SCRIPTSIG_SIZE{1650};
  * standard and should be done with care and ideally rarely. It makes sense to
  * only increase the dust limit after prior releases were already not creating
  * outputs below the new threshold */
-static constexpr unsigned int DUST_RELAY_TX_FEE{3000};
+static constexpr unsigned int DUST_RELAY_TX_FEE{1};
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
-static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{100};
+static constexpr unsigned int DEFAULT_MIN_RELAY_TX_FEE{1};
 /** Maximum number of transactions per cluster (default) */
 static constexpr unsigned int DEFAULT_CLUSTER_LIMIT{64};
 /** Maximum size of cluster in virtual kilobytes */
@@ -81,7 +81,7 @@ static const bool DEFAULT_ACCEPT_DATACARRIER = true;
 /**
  * Default setting for -datacarriersize in vbytes.
  */
-static const unsigned int MAX_OP_RETURN_RELAY = MAX_STANDARD_TX_WEIGHT / WITNESS_SCALE_FACTOR;
+static const unsigned int MAX_OP_RETURN_RELAY = MAX_STANDARD_TX_WEIGHT;
 /**
  * An extra transaction can be added to a package, as long as it only has one
  * ancestor and is no larger than this. Not really any reason to make this
@@ -195,6 +195,6 @@ static inline int64_t GetVirtualTransactionInputSize(const CTxIn& tx)
 
 int64_t GetSigOpsAdjustedWeight(int64_t weight, int64_t sigop_cost, unsigned int bytes_per_sigop);
 
-static inline FeePerVSize ToFeePerVSize(FeePerWeight feerate) { return {feerate.fee, (feerate.size + WITNESS_SCALE_FACTOR - 1) / WITNESS_SCALE_FACTOR}; }
+static inline FeePerVSize ToFeePerVSize(FeePerWeight feerate) { return {feerate.fee, feerate.size}; }
 
 #endif // BITCOIN_POLICY_POLICY_H
