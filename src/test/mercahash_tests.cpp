@@ -84,4 +84,65 @@ BOOST_AUTO_TEST_CASE(mercahash_second_fixed_test_vector)
     BOOST_CHECK(h == expected);
 }
 
+BOOST_AUTO_TEST_CASE(block_header_hash_and_powhash_are_different)
+{
+    CBlockHeader hdr;
+    hdr.nVersion = 1;
+    hdr.hashPrevBlock = uint256{};
+    hdr.hashMerkleRoot = uint256{};
+    hdr.nTime = 1700000000;
+    hdr.nBits = 0x1f00ffff;
+    hdr.nNonce = 42;
+
+    BOOST_CHECK(hdr.GetHash() != hdr.GetPoWHash());
+}
+
+BOOST_AUTO_TEST_CASE(mercahash_changes_when_time_changes)
+{
+    CBlockHeader hdr1;
+    hdr1.nVersion = 1;
+    hdr1.hashPrevBlock = uint256{};
+    hdr1.hashMerkleRoot = uint256{};
+    hdr1.nTime = 1700000000;
+    hdr1.nBits = 0x1f00ffff;
+    hdr1.nNonce = 42;
+
+    CBlockHeader hdr2 = hdr1;
+    hdr2.nTime = 1700000001;
+
+    BOOST_CHECK(hdr1.GetPoWHash() != hdr2.GetPoWHash());
+}
+
+BOOST_AUTO_TEST_CASE(mercahash_changes_when_nbits_changes)
+{
+    CBlockHeader hdr1;
+    hdr1.nVersion = 1;
+    hdr1.hashPrevBlock = uint256{};
+    hdr1.hashMerkleRoot = uint256{};
+    hdr1.nTime = 1700000000;
+    hdr1.nBits = 0x1f00ffff;
+    hdr1.nNonce = 42;
+
+    CBlockHeader hdr2 = hdr1;
+    hdr2.nBits = 0x1f00fffe;
+
+    BOOST_CHECK(hdr1.GetPoWHash() != hdr2.GetPoWHash());
+}
+
+BOOST_AUTO_TEST_CASE(mercahash_changes_when_prevblock_changes)
+{
+    CBlockHeader hdr1;
+    hdr1.nVersion = 1;
+    hdr1.hashPrevBlock = uint256{};
+    hdr1.hashMerkleRoot = uint256{};
+    hdr1.nTime = 1700000000;
+    hdr1.nBits = 0x1f00ffff;
+    hdr1.nNonce = 42;
+
+    CBlockHeader hdr2 = hdr1;
+    hdr2.hashPrevBlock = uint256::FromHex("0000000000000000000000000000000000000000000000000000000000000001").value();
+
+    BOOST_CHECK(hdr1.GetPoWHash() != hdr2.GetPoWHash());
+}
+
 BOOST_AUTO_TEST_SUITE_END()

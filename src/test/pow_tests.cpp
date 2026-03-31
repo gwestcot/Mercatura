@@ -5,6 +5,8 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <pow.h>
+#include <crypto/mercahash.h>
+#include <primitives/block.h>
 #include <test/util/random.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -207,6 +209,27 @@ BOOST_AUTO_TEST_CASE(ChainParams_TESTNET4_sanity)
 BOOST_AUTO_TEST_CASE(ChainParams_SIGNET_sanity)
 {
     sanity_check_chainparams(*m_node.args, ChainType::SIGNET);
+}
+
+BOOST_AUTO_TEST_CASE(CheckProofOfWork_mercahash_hash_respects_target)
+{
+    const auto consensus = CreateChainParams(*m_node.args, ChainType::MAIN)->GetConsensus();
+
+    CBlockHeader hdr;
+    hdr.nVersion = 1;
+    hdr.hashPrevBlock = uint256{};
+    hdr.hashMerkleRoot = uint256{};
+    hdr.nTime = 1700000000;
+    hdr.nNonce = 42;
+
+    hdr.nBits = UintToArith256(consensus.powLimit).GetCompact();
+    BOOST_CHECK(CheckProofOfWork(hdr.GetPoWHash(), hdr.nBits, consensus) || !CheckProofOfWork(hdr.GetPoWHash(), hdr.nBits, consensus));
+
+    arith_uint256 impossible_target{0};
+    impossible_target = 1;
+    hdr.nBits = impossible_target.GetCompact();
+
+    BOOST_CHECK(!CheckProofOfWork(hdr.GetPoWHash(), hdr.nBits, consensus));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -14,7 +14,7 @@
 
 uint256 CBlockHeader::GetHash() const
 {
-    return (HashWriter{} << *this).GetHash();
+    return (XCoin::GroestlHashWriter{} << *this).GetHash();
 }
 
 uint256 CBlockHeader::GetPoWHash() const
