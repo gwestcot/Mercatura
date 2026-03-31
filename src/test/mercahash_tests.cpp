@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(mercahash_changes_when_nonce_changes)
     BOOST_CHECK(MercaHashFromHeader(hdr1) != MercaHashFromHeader(hdr2));
 }
 
-BOOST_AUTO_TEST_CASE(block_header_gethash_matches_mercahash)
+BOOST_AUTO_TEST_CASE(block_header_getpowhash_matches_mercahash)
 {
     CBlockHeader hdr;
     hdr.nVersion = 1;
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(block_header_gethash_matches_mercahash)
     hdr.nBits = 0x1f00ffff;
     hdr.nNonce = 42;
 
-    BOOST_CHECK(hdr.GetHash() == MercaHashFromHeader(hdr));
+    BOOST_CHECK(hdr.GetPoWHash() == MercaHashFromHeader(hdr));
 }
 
 BOOST_AUTO_TEST_CASE(mercahash_fixed_test_vector)

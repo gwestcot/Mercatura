@@ -5,6 +5,7 @@
 
 #include <primitives/block.h>
 #include <crypto/mercahash.h>
+#include <hash.h>
 #include <groestlcoin.h>
 #include <tinyformat.h>
 #include <memory>
@@ -12,6 +13,11 @@
 #include <sstream>
 
 uint256 CBlockHeader::GetHash() const
+{
+    return (HashWriter{} << *this).GetHash();
+}
+
+uint256 CBlockHeader::GetPoWHash() const
 {
     return MercaHashFromHeader(*this);
 }
