@@ -124,8 +124,8 @@ int ParseVerbosity(const UniValue& arg, int default_verbosity, bool allow_bool);
  */
 CAmount AmountFromValue(const UniValue& value, int decimals = 2);
 /**
- * Parse a json number or string, denoting GRS/kvB, into a CFeeRate (gro/kvB).
- * Reject negative values or rates larger than 1GRS/kvB.
+ * Parse a json number or string, denoting MCA/kvB, into a CFeeRate (Base Units/kvB).
+ * Reject negative values or rates larger than 1 MCA/kvB.
  */
 CFeeRate ParseFeeRate(const UniValue& json);
 
