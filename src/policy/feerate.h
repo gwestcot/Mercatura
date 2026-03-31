@@ -16,8 +16,8 @@
 #include <string>
 #include <type_traits>
 
-const std::string CURRENCY_UNIT = "GRS"; // GRS One formatted unit
-const std::string CURRENCY_ATOM = "gro"; // GRS One indivisible minimum value unit
+const std::string CURRENCY_UNIT = "MCA"; // MCA One formatted unit
+const std::string CURRENCY_ATOM = "credits"; // MCA One indivisible minimum value unit
 
 enum class FeeRateFormat {
     BTC_KVB, //!< Use GRS/kvB fee rate unit
